@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>系统设置 - 社媒AI自动化SaaS平台</title>
+<script src="https://modao.cc/agent-py/static/source/js/tailwindcss.js"></script>
+<script src="https://modao.cc/agent-py/static/source/js/iconify-icon.min.js"></script>
+<style>
+        body { background-color: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .sidebar-item:hover { background-color: #263445; }
+        .sidebar-item.active { color: #409eff; background-color: #263445; }
+        .el-button-primary { background-color: #409eff; color: white; }
+        .el-tabs-item.active { color: #409eff; border-bottom: 2px solid #409eff; }
+        .modal-overlay { background-color: rgba(0, 0, 0, 0.5); }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+<!-- 侧边栏 -->
+<aside class="w-[240px] bg-[#304156] flex-none flex flex-col">
+<div class="h-[60px] flex items-center px-6 gap-3 border-b border-[#1f2d3d]">
+<iconify-icon class="text-2xl text-[#409eff]" icon="ri:robot-fill"></iconify-icon>
+<span class="text-white font-bold tracking-tight">SocialAI SaaS</span>
+</div>
+<nav class="flex-1 overflow-y-auto py-4">
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="dashboard.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:dashboard-3-line"></iconify-icon>
+<span class="text-sm">首页仪表盘</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="tenant_management.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:building-4-line"></iconify-icon>
+<span class="text-sm">租户管理</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="social_accounts.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:share-box-line"></iconify-icon>
+<span class="text-sm">社媒账号管理</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="crawler_tasks.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:robot-line"></iconify-icon>
+<span class="text-sm">爬虫任务管理</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="proxy_ip.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:global-line"></iconify-icon>
+<span class="text-sm">代理IP管理</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="ai_config.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:brain-line"></iconify-icon>
+<span class="text-sm">AI配置中心</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="crm_leads.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:user-search-line"></iconify-icon>
+<span class="text-sm">CRM客户线索</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="messages.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:message-3-line"></iconify-icon>
+<span class="text-sm">消息会话管理</span>
+</a>
+<a class="sidebar-item active flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="settings.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:settings-4-line"></iconify-icon>
+<span class="text-sm">系统设置</span>
+</a>
+</nav>
+</aside>
+<div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+<!-- 顶部栏 -->
+<header class="h-[60px] bg-white border-b border-[#e6e6e6] flex items-center justify-between px-6 flex-none">
+<div class="flex items-center text-gray-500">
+<iconify-icon class="text-xl cursor-pointer mr-4" icon="ri:menu-fold-line"></iconify-icon>
+<div class="flex items-center text-sm">
+<span class="text-gray-400">系统管理</span>
+<span class="mx-2">/</span>
+<span class="text-gray-700 font-medium">系统设置</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 border-r pr-4">
+<span class="text-xs text-gray-400">切换角色:</span>
+<select class="text-sm border border-gray-300 rounded px-2 py-1 outline-none focus:border-[#409eff]" id="roleSelect" onchange="changeRole(this.value)">
+<option value="super_admin">超级管理员</option>
+<option value="tenant_admin">租户管理员</option>
+<option value="operator">业务员子账号</option>
+</select>
+</div>
+<div class="flex items-center gap-2">
+<img class="w-8 h-8 rounded-full border" src="/agent-py/static/source/images/placeholder.svg"/>
+<div class="flex flex-col">
+<span class="text-sm font-medium text-gray-700 leading-tight">Admin</span>
+<span class="text-[10px] leading-tight font-medium px-1 rounded" id="roleLabel"></span>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-1 overflow-y-auto p-6">
+<div class="bg-white rounded p-8 shadow-sm max-w-4xl mx-auto">
+<div class="border-b flex gap-8 mb-8 text-sm font-medium text-gray-500">
+<div class="pb-3 border-b-2 border-[#409eff] text-[#409eff] cursor-pointer" id="tabBasic" onclick="switchSettingsTab('basic')">基本设置</div>
+<div class="pb-3 cursor-pointer hover:text-gray-700" id="tabUser" onclick="switchSettingsTab('user')">用户管理</div>
+<div class="pb-3 cursor-pointer hover:text-gray-700">安全设置</div>
+</div>
+<div class="space-y-6" id="basicSettings">
+<div class="flex flex-col gap-2">
+<label class="text-sm text-gray-700 font-medium">系统名称</label>
+<input class="border border-gray-300 rounded px-4 py-2 text-sm focus:border-[#409eff] outline-none" type="text" value="社媒AI自动化SaaS平台"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-sm text-gray-700 font-medium">系统LOGO</label>
+<div class="flex items-center gap-4">
+<div class="w-16 h-16 bg-gray-100 rounded border flex items-center justify-center text-gray-400">
+<iconify-icon class="text-3xl" icon="ri:robot-fill"></iconify-icon>
+</div>
+<button class="px-3 py-1.5 border border-gray-300 rounded text-xs hover:bg-gray-50">更换图片</button>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-sm text-gray-700 font-medium">默认备案信息</label>
+<input class="border border-gray-300 rounded px-4 py-2 text-sm focus:border-[#409eff] outline-none" type="text" value="© 2026 SocialAI Technology Co., Ltd. 粤ICP备12345678号"/>
+</div>
+<div class="pt-6">
+<button class="el-button-primary px-6 py-2 rounded text-sm">保存设置</button>
+</div>
+</div>
+<div class="space-y-6" id="userSettings" style="display: none;">
+<div class="flex justify-between items-center mb-4">
+<h4 class="text-sm font-bold text-gray-700">系统用户列表</h4>
+<button class="el-button-primary px-4 py-2 rounded text-sm flex items-center gap-1" onclick="openModal('addUserModal')">
+<iconify-icon icon="ri:user-add-line"></iconify-icon> 新增用户
+                        </button>
+</div>
+<table class="w-full text-sm">
+<thead>
+<tr class="text-left text-gray-400 border-b">
+<th class="pb-3 font-medium">用户名</th>
+<th class="pb-3 font-medium">角色</th>
+<th class="pb-3 font-medium">最后登录</th>
+<th class="pb-3 font-medium text-right">操作</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b">
+<td class="py-4">admin</td>
+<td class="py-4"><span class="px-2 py-0.5 bg-blue-50 text-blue-600 text-xs rounded">超级管理员</span></td>
+<td class="py-4 text-gray-400">2026-07-17 08:30</td>
+<td class="py-4 text-right">
+<button class="text-[#409eff] hover:underline">编辑</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</main>
+</div>
+<!-- 弹窗：新增用户 -->
+<div class="modal-overlay fixed inset-0 z-50 flex items-center justify-center" id="addUserModal" style="display: none;">
+<div class="bg-white rounded-lg shadow-xl w-[450px]">
+<div class="flex items-center justify-between px-6 py-4 border-b">
+<h3 class="font-bold text-gray-700">新增系统用户</h3>
+<button class="text-gray-400 hover:text-gray-600" onclick="closeModal('addUserModal')">
+<iconify-icon class="text-xl" icon="ri:close-line"></iconify-icon>
+</button>
+</div>
+<div class="p-6 space-y-4">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+<input class="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:border-[#409eff]" placeholder="用于登录的账号" type="text"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">用户角色</label>
+<select class="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:border-[#409eff]">
+<option value="super_admin">超级管理员</option>
+<option value="tenant_admin">租户管理员</option>
+<option value="operator">业务员</option>
+</select>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">初始密码</label>
+<input class="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:border-[#409eff]" placeholder="请输入登录密码" type="password"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">所属租户 (仅租户角色有效)</label>
+<select class="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:border-[#409eff]">
+<option value="none">无 (平台直属)</option>
+<option value="1">广州悦享科技</option>
+<option value="2">上海晨风服饰</option>
+</select>
+</div>
+</div>
+<div class="px-6 py-4 border-t bg-gray-50 flex justify-end gap-3 rounded-b-lg">
+<button class="px-4 py-2 border border-gray-300 rounded text-sm hover:bg-white" onclick="closeModal('addUserModal')">取消</button>
+<button class="px-4 py-2 bg-[#409eff] text-white rounded text-sm hover:bg-[#66b1ff]" onclick="closeModal('addUserModal')">确认创建</button>
+</div>
+</div>
+</div>
+<script>
+        function openModal(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                event.target.style.display = 'none';
+            }
+        }
+        function switchSettingsTab(tab) {
+            const basicTab = document.getElementById('tabBasic');
+            const userTab = document.getElementById('tabUser');
+            const basicSettings = document.getElementById('basicSettings');
+            const userSettings = document.getElementById('userSettings');
+
+            if (tab === 'basic') {
+                basicTab.className = 'pb-3 border-b-2 border-[#409eff] text-[#409eff] cursor-pointer';
+                userTab.className = 'pb-3 cursor-pointer hover:text-gray-700';
+                basicSettings.style.display = 'block';
+                userSettings.style.display = 'none';
+            } else {
+                userTab.className = 'pb-3 border-b-2 border-[#409eff] text-[#409eff] cursor-pointer';
+                basicTab.className = 'pb-3 cursor-pointer hover:text-gray-700';
+                userSettings.style.display = 'block';
+                basicSettings.style.display = 'none';
+            }
+        }
+
+        function updateSidebar() {
+            const role = localStorage.getItem('currentRole') || 'super_admin';
+            const sidebarItems = document.querySelectorAll('.sidebar-item');
+            
+            // 首先显示所有项，防止全部消失
+            sidebarItems.forEach(item => {
+                item.style.display = 'flex';
+            });
+            
+            // 定义不同角色需要隐藏的项 (基于文件名)
+            const hideConfig = {
+                'super_admin': [],
+                'tenant_admin': ['tenant_management.html', 'proxy_ip.html', 'settings.html'],
+                'operator': ['tenant_management.html', 'social_accounts.html', 'crawler_tasks.html', 'proxy_ip.html', 'ai_config.html', 'settings.html']
+            };
+            
+            const toHide = hideConfig[role] || [];
+            
+            sidebarItems.forEach(item => {
+                const href = item.getAttribute('href');
+                if (href) {
+                    const fileName = href.split('/').pop();
+                    if (toHide.includes(fileName)) {
+                        item.style.display = 'none';
+                    }
+                }
+            });
+        }
+        function updateRoleUI() {
+            const role = localStorage.getItem('currentRole') || 'super_admin';
+            const roleSelect = document.getElementById('roleSelect');
+            if (roleSelect) roleSelect.value = role;
+            const roleLabel = document.getElementById('roleLabel');
+            if (roleLabel) {
+                const roles = {
+                    'super_admin': { text: '超级管理员', class: 'text-blue-500 bg-blue-50' },
+                    'tenant_admin': { text: '租户管理员', class: 'text-green-500 bg-green-50' },
+                    'operator': { text: '业务员', class: 'text-orange-500 bg-orange-50' }
+                };
+                roleLabel.innerText = roles[role].text;
+                roleLabel.className = `text-[10px] px-1.5 py-0.5 rounded ${roles[role].class} leading-tight font-medium`;
+            }
+        }
+        function checkPermission() {
+            const role = localStorage.getItem('currentRole') || 'super_admin';
+            const path = 'settings.html';
+            const permissions = {
+                'super_admin': ['dashboard.html', 'tenant_management.html', 'social_accounts.html', 'crawler_tasks.html', 'proxy_ip.html', 'ai_config.html', 'crm_leads.html', 'messages.html', 'settings.html'],
+                'tenant_admin': ['dashboard.html', 'social_accounts.html', 'crawler_tasks.html', 'ai_config.html', 'crm_leads.html', 'messages.html'],
+                'operator': ['dashboard.html', 'crm_leads.html', 'messages.html']
+            };
+            if (!permissions[role].includes(path)) {
+                document.querySelector('main').innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full">
+                        <div class="bg-white p-10 rounded-lg shadow-md text-center">
+                            <iconify-icon icon="ri:lock-password-fill" class="text-6xl text-red-500 mb-4"></iconify-icon>
+                            <h2 class="text-2xl font-bold text-gray-800 mb-2">🔒 无权限访问</h2>
+                            <p class="text-gray-500 mb-6">抱歉，您当前的角色（${getRoleName(role)}）无权访问此页面。</p>
+                            <button onclick="location.href='dashboard.html'" class="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">返回首页</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        function getRoleName(role) {
+            if (role === 'super_admin') return '超级管理员';
+            if (role === 'tenant_admin') return '租户管理员';
+            if (role === 'operator') return '业务员';
+            return role;
+        }
+        function changeRole(role) {
+            localStorage.setItem('currentRole', role);
+            location.reload();
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            updateSidebar();
+            updateRoleUI();
+            checkPermission();
+        });
+    </script>
+</body>
+</html>

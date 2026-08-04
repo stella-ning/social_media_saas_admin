@@ -1,0 +1,610 @@
+<template>
+  <div class="tenants-page">
+    <!-- ========== 顶部总数据统计 ========== -->
+    <el-row :gutter="20" class="stat-row">
+      <el-col :xs="12" :sm="6" v-for="s in stats" :key="s.label">
+        <el-card shadow="hover" class="stat-card">
+          <div class="stat-inner">
+            <div>
+              <div class="stat-label">{{ s.label }}</div>
+              <div class="stat-value">{{ s.value }}</div>
+            </div>
+            <div class="stat-icon" :style="{ background: s.bg, color: s.color }">
+              <el-icon :size="22"><component :is="s.icon" /></el-icon>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <!-- ========== 表格卡片 ========== -->
+    <el-card shadow="hover" class="table-card">
+      <!-- 顶部操作栏：搜索、重置、批量操作、导出、新增租户 -->
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <el-input
+            v-model="query.keyword"
+            placeholder="租户名称/联系人"
+            clearable
+            style="width: 200px"
+            :prefix-icon="Search"
+          />
+          <el-select v-model="query.status" placeholder="所有状态" clearable style="width: 120px">
+            <el-option label="已启用" :value="1" />
+            <el-option label="已禁用" :value="0" />
+          </el-select>
+          <el-select v-model="query.package" placeholder="所有套餐" clearable style="width: 120px">
+            <el-option label="基础版" value="basic" />
+            <el-option label="专业版" value="pro" />
+            <el-option label="企业版" value="ent" />
+          </el-select>
+          <el-button type="primary" @click="handleSearch">搜索</el-button>
+          <el-button @click="handleReset">重置</el-button>
+        </div>
+        <div class="toolbar-right">
+          <el-dropdown :disabled="selectedRows.length === 0">
+            <el-button :disabled="selectedRows.length === 0" :loading="batchLoading">
+              批量操作 <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item @click="batchEnable">批量启用</el-dropdown-item>
+                <el-dropdown-item @click="batchDisable">批量禁用</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+          <el-button :icon="Download" :loading="exportLoading" @click="handleExport">导出</el-button>
+          <el-button type="primary" :icon="Plus" @click="openAddDialog">新增租户</el-button>
+        </div>
+      </div>
+
+      <!-- 表格列：租户名称/联系人、联系方式、套餐类型、创建时间、状态、操作 -->
+      <el-table
+        v-loading="loading"
+        :data="list"
+        border
+        stripe
+        style="width: 100%"
+        @selection-change="onSelectionChange"
+      >
+        <el-table-column type="selection" width="48" align="center" />
+        <el-table-column label="租户名称/联系人" min-width="200">
+          <template #default="{ row }">
+            <div class="tenant-name">{{ row.name }}</div>
+            <div class="tenant-sub">联系人：{{ row.contact }} · ID: {{ row.id }}</div>
+          </template>
+        </el-table-column>
+        <el-table-column label="联系方式" min-width="180">
+          <template #default="{ row }">
+            <div>{{ row.phone }}</div>
+            <div class="tenant-sub">{{ row.email }}</div>
+          </template>
+        </el-table-column>
+        <el-table-column label="套餐类型" width="110" align="center">
+          <template #default="{ row }">
+            <el-tag :type="packageTagType(row.package)" size="small">
+              {{ packageLabel(row.package) }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="createTime" label="创建时间" width="120" align="center" />
+        <el-table-column label="状态" width="100" align="center">
+          <template #default="{ row }">
+            <el-switch
+              v-model="row.status"
+              :active-value="1"
+              :inactive-value="0"
+              :loading="row._toggleLoading"
+              @change="(val) => onStatusChange(row, val)"
+            />
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="280" fixed="right" align="center">
+          <template #default="{ row }">
+            <div class="table-actions">
+              <!-- 查看配额详情 -->
+              <el-popover placement="top" :width="200" trigger="hover">
+                <template #reference>
+                  <el-button link type="primary" size="small">查看配额详情</el-button>
+                </template>
+                <p>任务并发：{{ row.concurrent }} 个</p>
+                <p>AI调用：{{ row.aiQuota.toLocaleString() }} 次/月</p>
+                <p>账号上限：{{ row.binds }} 个</p>
+                <p>知识库：{{ row.kb }} GB</p>
+              </el-popover>
+              <el-button link type="primary" size="small" @click="openEditDialog(row)">编辑</el-button>
+              <el-button link type="primary" size="small" @click="openAiDialog(row)">AI配置</el-button>
+              <el-button link type="primary" size="small" @click="openPackageDialog(row)">套餐</el-button>
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <!-- 分页 -->
+      <div class="pagination-wrap">
+        <span class="total-tip">共 {{ total }} 条记录</span>
+        <el-pagination
+          v-model:current-page="page"
+          v-model:page-size="size"
+          :page-sizes="[10, 20, 50]"
+          :total="total"
+          layout="sizes, prev, pager, next, jumper"
+          background
+          @current-change="handlePageChange"
+          @size-change="handleSizeChange"
+        />
+      </div>
+    </el-card>
+
+    <!-- ========== 新增 / 编辑租户弹窗 ========== -->
+    <el-dialog
+      v-model="formVisible"
+      :title="formMode === 'add' ? '新增租户' : `编辑租户：${formData.name}`"
+      width="520px"
+      destroy-on-close
+    >
+      <el-form :model="formData" label-width="90px">
+        <el-form-item label="租户名称" required>
+          <el-input v-model="formData.name" placeholder="请输入公司或机构名称" />
+        </el-form-item>
+        <el-form-item label="联系人" required>
+          <el-input v-model="formData.contact" placeholder="负责人姓名" />
+        </el-form-item>
+        <el-form-item label="联系电话">
+          <el-input v-model="formData.phone" placeholder="手机号" />
+        </el-form-item>
+        <el-form-item label="邮箱">
+          <el-input v-model="formData.email" placeholder="email@example.com" />
+        </el-form-item>
+        <el-form-item v-if="formMode === 'add'" label="选择套餐">
+          <el-select v-model="formData.package" style="width: 100%">
+            <el-option label="基础版" value="basic" />
+            <el-option label="专业版" value="pro" />
+            <el-option label="企业版" value="ent" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="formData.remark" type="textarea" :rows="3" placeholder="备注信息" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="formVisible = false">取消</el-button>
+        <el-button type="primary" :loading="saving" @click="saveTenant">
+          {{ formMode === 'add' ? '立即创建' : '保存修改' }}
+        </el-button>
+      </template>
+    </el-dialog>
+
+    <!-- ========== AI配置弹窗 ========== -->
+    <el-dialog v-model="aiVisible" title="配置AI模板" width="600px" destroy-on-close>
+      <el-form label-width="90px">
+        <el-form-item label="模板类型">
+          <el-select v-model="aiForm.type" style="width: 100%">
+            <el-option label="社媒评论生成" value="comment" />
+            <el-option label="客户意向打分" value="scoring" />
+            <el-option label="私信智能问答" value="chat" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="角色设置">
+          <el-input
+            v-model="aiForm.role"
+            type="textarea"
+            :rows="3"
+          />
+        </el-form-item>
+        <el-form-item label="约束条件">
+          <el-input
+            v-model="aiForm.rules"
+            type="textarea"
+            :rows="5"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="aiVisible = false">取消</el-button>
+        <el-button type="primary" :loading="aiSaving" @click="saveAi">保存配置</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- ========== 套餐配置弹窗 ========== -->
+    <el-dialog v-model="pkgVisible" :title="`套餐配置 [${pkgTarget?.name || ''}]`" width="520px" destroy-on-close>
+      <el-form label-width="120px">
+        <el-form-item label="当前套餐等级">
+          <el-select v-model="pkgForm.package" style="width: 100%">
+            <el-option label="基础版" value="basic" />
+            <el-option label="专业版" value="pro" />
+            <el-option label="企业版" value="ent" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="任务并发数">
+          <el-slider v-model="pkgForm.concurrent" :min="1" :max="100" show-input />
+        </el-form-item>
+        <el-form-item label="AI调用额度/月">
+          <el-slider v-model="pkgForm.aiQuota" :min="1000" :max="100000" :step="1000" show-input />
+        </el-form-item>
+        <el-form-item label="账号绑定数量">
+          <el-slider v-model="pkgForm.binds" :min="1" :max="50" show-input />
+        </el-form-item>
+        <el-form-item label="知识库容量(GB)">
+          <el-slider v-model="pkgForm.kb" :min="1" :max="100" show-input />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="pkgVisible = false">取消</el-button>
+        <el-button type="primary" :loading="pkgSaving" @click="savePackage">应用配置</el-button>
+      </template>
+    </el-dialog>
+  </div>
+</template>
+
+<script setup>
+/**
+ * 租户管理页面（仅超级管理员可见）
+ * - useListQuery + tenantApi.list 分页列表
+ * - tenantApi.stats 顶部统计卡片
+ * - 增删改查、切换状态、套餐配置、导出 CSV
+ */
+import { ref, reactive, onMounted } from 'vue'
+import { Search, Download, Plus, ArrowDown } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import { tenantApi, aiConfigApi } from '@/api'
+import { useListQuery } from '@/composables/useListQuery'
+
+/** 顶部统计卡片配置 */
+const STAT_META = [
+  { label: '总租户数', key: 'total', icon: 'OfficeBuilding', bg: '#ecf5ff', color: '#409eff' },
+  { label: '启用租户', key: 'enabled', icon: 'CircleCheck', bg: '#f0f9eb', color: '#67c23a' },
+  { label: '今日新增', key: 'todayNew', icon: 'UserFilled', bg: '#fdf6ec', color: '#e6a23c' },
+  { label: '本月活跃', key: 'monthActive', icon: 'DataLine', bg: '#f4f4f5', color: '#909399' }
+]
+
+const stats = ref(STAT_META.map((s) => ({ ...s, value: 0 })))
+
+const {
+  loading,
+  list,
+  total,
+  page,
+  size,
+  query,
+  fetchList,
+  handleSearch,
+  handleReset,
+  handlePageChange,
+  handleSizeChange
+} = useListQuery(tenantApi.list, { keyword: '', status: '', package: '' })
+
+const selectedRows = ref([])
+const saving = ref(false)
+const batchLoading = ref(false)
+const exportLoading = ref(false)
+const aiSaving = ref(false)
+const pkgSaving = ref(false)
+
+/** 加载顶部统计数据 */
+const fetchStats = async () => {
+  try {
+    const data = await tenantApi.stats()
+    stats.value = STAT_META.map((s) => ({
+      ...s,
+      value: data?.[s.key] ?? 0
+    }))
+  } catch {
+    // 错误已在拦截器提示
+  }
+}
+
+const packageLabel = (p) => ({ basic: '基础版', pro: '专业版', ent: '企业版' }[p] || p)
+const packageTagType = (p) => ({ basic: '', pro: 'success', ent: 'warning' }[p] || 'info')
+
+const onSelectionChange = (rows) => {
+  selectedRows.value = rows
+}
+
+/** 批量启用 */
+const batchEnable = async () => {
+  if (!selectedRows.value.length) return
+  batchLoading.value = true
+  try {
+    await Promise.all(selectedRows.value.map((r) => tenantApi.toggle(r.id, { status: 1 })))
+    ElMessage.success('批量启用成功')
+    await fetchList()
+    await fetchStats()
+  } catch {
+    // 错误已在拦截器提示
+  } finally {
+    batchLoading.value = false
+  }
+}
+
+/** 批量禁用 */
+const batchDisable = async () => {
+  if (!selectedRows.value.length) return
+  batchLoading.value = true
+  try {
+    await Promise.all(selectedRows.value.map((r) => tenantApi.toggle(r.id, { status: 0 })))
+    ElMessage.success('批量禁用成功')
+    await fetchList()
+    await fetchStats()
+  } catch {
+    // 错误已在拦截器提示
+  } finally {
+    batchLoading.value = false
+  }
+}
+
+/** 导出租户 CSV */
+const handleExport = async () => {
+  exportLoading.value = true
+  try {
+    const response = await tenantApi.export({
+      keyword: query.keyword || undefined,
+      status: query.status !== '' ? query.status : undefined,
+      package: query.package || undefined
+    })
+    const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `tenants_${Date.now()}.csv`
+    link.click()
+    URL.revokeObjectURL(url)
+    ElMessage.success('导出成功')
+  } catch {
+    // 错误已在拦截器提示
+  } finally {
+    exportLoading.value = false
+  }
+}
+
+/** 切换租户启用/禁用 */
+const onStatusChange = async (row, val) => {
+  const prev = val === 1 ? 0 : 1
+  row._toggleLoading = true
+  try {
+    await tenantApi.toggle(row.id, { status: val })
+    ElMessage.success(`${row.name} 已${val ? '启用' : '禁用'}`)
+    await fetchStats()
+  } catch {
+    row.status = prev
+  } finally {
+    row._toggleLoading = false
+  }
+}
+
+/* ----- 新增/编辑 ----- */
+const formVisible = ref(false)
+const formMode = ref('add')
+const formData = reactive({
+  id: null,
+  name: '',
+  contact: '',
+  phone: '',
+  email: '',
+  package: 'basic',
+  remark: ''
+})
+
+const openAddDialog = () => {
+  formMode.value = 'add'
+  Object.assign(formData, {
+    id: null,
+    name: '',
+    contact: '',
+    phone: '',
+    email: '',
+    package: 'basic',
+    remark: ''
+  })
+  formVisible.value = true
+}
+
+const openEditDialog = (row) => {
+  formMode.value = 'edit'
+  Object.assign(formData, {
+    id: row.id,
+    name: row.name,
+    contact: row.contact,
+    phone: row.phone,
+    email: row.email,
+    package: row.package,
+    remark: row.remark || ''
+  })
+  formVisible.value = true
+}
+
+const saveTenant = async () => {
+  if (!formData.name || !formData.contact) {
+    ElMessage.warning('请填写租户名称和联系人')
+    return
+  }
+  saving.value = true
+  try {
+    if (formMode.value === 'add') {
+      await tenantApi.create({
+        name: formData.name,
+        contact: formData.contact,
+        phone: formData.phone,
+        email: formData.email,
+        package: formData.package,
+        remark: formData.remark
+      })
+      ElMessage.success('租户创建成功')
+    } else {
+      await tenantApi.update(formData.id, {
+        name: formData.name,
+        contact: formData.contact,
+        phone: formData.phone,
+        email: formData.email,
+        remark: formData.remark
+      })
+      ElMessage.success('修改已保存')
+    }
+    formVisible.value = false
+    await fetchList()
+    await fetchStats()
+  } catch {
+    // 错误已在拦截器提示
+  } finally {
+    saving.value = false
+  }
+}
+
+/* ----- AI配置 ----- */
+const aiVisible = ref(false)
+const aiTarget = ref(null)
+const aiForm = reactive({
+  type: 'comment',
+  role: '角色：源头工厂、实体商家、行业从业者，在小红书、抖音、视频号评论区友好互动。',
+  rules: '1.贴合帖子内容自然回复；\n2.口语化、简短1-2句；\n3.围绕产品、货源、定制交流；\n4.软互动不硬广；\n5.每条话术不重复；\n6.不留任何联系方式。'
+})
+
+const AI_TYPE_NAMES = {
+  comment: '社媒评论生成',
+  scoring: '客户意向打分',
+  chat: '私信智能问答'
+}
+
+const openAiDialog = (row) => {
+  aiTarget.value = row
+  aiVisible.value = true
+}
+
+const saveAi = async () => {
+  aiSaving.value = true
+  try {
+    await aiConfigApi.saveTemplate({
+      tenantId: aiTarget.value?.id,
+      category: aiForm.type,
+      name: AI_TYPE_NAMES[aiForm.type] || aiForm.type,
+      role: aiForm.role,
+      rules: aiForm.rules
+    })
+    ElMessage.success('AI模板已保存')
+    aiVisible.value = false
+  } catch {
+    // 错误已在拦截器提示
+  } finally {
+    aiSaving.value = false
+  }
+}
+
+/* ----- 套餐配置 ----- */
+const pkgVisible = ref(false)
+const pkgTarget = ref(null)
+const pkgForm = reactive({ package: 'basic', concurrent: 10, aiQuota: 5000, binds: 10, kb: 5 })
+
+const openPackageDialog = (row) => {
+  pkgTarget.value = row
+  Object.assign(pkgForm, {
+    package: row.package,
+    concurrent: row.concurrent,
+    aiQuota: row.aiQuota,
+    binds: row.binds,
+    kb: row.kb
+  })
+  pkgVisible.value = true
+}
+
+const savePackage = async () => {
+  if (!pkgTarget.value) return
+  pkgSaving.value = true
+  try {
+    await tenantApi.updatePackage(pkgTarget.value.id, { ...pkgForm })
+    ElMessage.success('配置已更新')
+    pkgVisible.value = false
+    await fetchList()
+  } catch {
+    // 错误已在拦截器提示
+  } finally {
+    pkgSaving.value = false
+  }
+}
+
+onMounted(async () => {
+  await Promise.all([fetchList(), fetchStats()])
+})
+</script>
+
+<style scoped>
+.stat-row {
+  margin-bottom: 16px;
+}
+.stat-card {
+  margin-bottom: 12px;
+  border-radius: 4px;
+}
+.stat-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.stat-label {
+  font-size: 13px;
+  color: #909399;
+  margin-bottom: 6px;
+}
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #303133;
+}
+.stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.table-card {
+  border-radius: 4px;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.toolbar-left,
+.toolbar-right {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.tenant-name {
+  font-weight: 600;
+  color: #303133;
+}
+.tenant-sub {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 2px;
+}
+
+.pagination-wrap {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.total-tip {
+  font-size: 13px;
+  color: #909399;
+}
+
+.table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0;
+}
+</style>

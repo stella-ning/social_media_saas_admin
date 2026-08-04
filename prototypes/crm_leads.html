@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CRM客户线索 - 社媒AI自动化SaaS平台</title>
+<script src="https://modao.cc/agent-py/static/source/js/tailwindcss.js"></script>
+<script src="https://modao.cc/agent-py/static/source/js/iconify-icon.min.js"></script>
+<style>
+        body { background-color: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .sidebar-item:hover { background-color: #263445; }
+        .sidebar-item.active { color: #409eff; background-color: #263445; }
+        .el-button-primary { background-color: #409eff; color: white; }
+        .el-table th { background-color: #f5f7fa; color: #909399; font-weight: 600; font-size: 14px; }
+        .el-table td { border-bottom: 1px solid #ebeef5; padding: 12px 0; color: #606266; font-size: 14px; }
+        .el-tag { padding: 2px 8px; border-radius: 4px; font-size: 12px; border: 1px solid transparent; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+<!-- 侧边栏 -->
+<aside class="w-[240px] bg-[#304156] flex-none flex flex-col">
+<div class="h-[60px] flex items-center px-6 gap-3 border-b border-[#1f2d3d]">
+<iconify-icon class="text-2xl text-[#409eff]" icon="ri:robot-fill"></iconify-icon>
+<span class="text-white font-bold tracking-tight">SocialAI SaaS</span>
+</div>
+<nav class="flex-1 overflow-y-auto py-4">
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="dashboard.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:dashboard-3-line"></iconify-icon>
+<span class="text-sm">首页仪表盘</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="tenant_management.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:building-4-line"></iconify-icon>
+<span class="text-sm">租户管理</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="social_accounts.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:share-box-line"></iconify-icon>
+<span class="text-sm">社媒账号管理</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="crawler_tasks.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:robot-line"></iconify-icon>
+<span class="text-sm">爬虫任务管理</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="proxy_ip.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:global-line"></iconify-icon>
+<span class="text-sm">代理IP管理</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="ai_config.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:brain-line"></iconify-icon>
+<span class="text-sm">AI配置中心</span>
+</a>
+<a class="sidebar-item active flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="crm_leads.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:user-search-line"></iconify-icon>
+<span class="text-sm">CRM客户线索</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="messages.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:message-3-line"></iconify-icon>
+<span class="text-sm">消息会话管理</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="settings.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:settings-4-line"></iconify-icon>
+<span class="text-sm">系统设置</span>
+</a>
+</nav>
+</aside>
+<div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+<!-- 顶部栏 -->
+<header class="h-[60px] bg-white border-b border-[#e6e6e6] flex items-center justify-between px-6 flex-none">
+<div class="flex items-center text-gray-500">
+<iconify-icon class="text-xl cursor-pointer mr-4" icon="ri:menu-fold-line"></iconify-icon>
+<div class="flex items-center text-sm">
+<span class="text-gray-400">客户管理</span>
+<span class="mx-2">/</span>
+<span class="text-gray-700 font-medium">CRM客户线索</span>
+<span class="ml-4 text-blue-500 font-normal" id="roleContext"></span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 border-r pr-4">
+<span class="text-xs text-gray-400">切换角色:</span>
+<select class="text-sm border border-gray-300 rounded px-2 py-1 outline-none focus:border-[#409eff]" id="roleSelect" onchange="changeRole(this.value)">
+<option value="super_admin">超级管理员</option>
+<option value="tenant_admin">租户管理员</option>
+<option value="operator">业务员子账号</option>
+</select>
+</div>
+<div class="flex items-center gap-2">
+<img class="w-8 h-8 rounded-full border" src="/agent-py/static/source/images/placeholder.svg"/>
+<div class="flex flex-col">
+<span class="text-sm font-medium text-gray-700 leading-tight">Admin</span>
+<span class="text-[10px] leading-tight font-medium px-1 rounded" id="roleLabel"></span>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-1 overflow-y-auto p-6">
+<div class="bg-white rounded p-6 shadow-sm">
+<div class="flex items-center justify-between mb-6">
+<div class="flex gap-4">
+<input class="border border-gray-300 rounded px-3 py-2 text-sm w-64 outline-none focus:border-[#409eff]" placeholder="客户昵称/联系方式" type="text"/>
+<select class="border border-gray-300 rounded px-3 py-2 text-sm w-40 outline-none focus:border-[#409eff]" id="tenantSelect">
+<option value="">所有租户</option>
+<option value="1">广州悦享科技</option>
+</select>
+<select class="border border-gray-300 rounded px-3 py-2 text-sm w-32 outline-none focus:border-[#409eff]">
+<option value="">意向等级</option>
+<option value="high">高意向</option>
+<option value="mid">中意向</option>
+</select>
+<button class="bg-[#f4f4f5] text-[#606266] px-4 py-2 rounded text-sm hover:bg-gray-200">搜索</button>
+</div>
+<button class="el-button-primary px-4 py-2 rounded text-sm flex items-center gap-1">
+<iconify-icon icon="ri:download-line"></iconify-icon> 导出线索
+                    </button>
+</div>
+<table class="w-full el-table text-sm">
+<thead>
+<tr class="text-left">
+<th class="px-4 py-3">客户昵称</th>
+<th class="px-4 py-3">联系方式</th>
+<th class="px-4 py-3">来源笔记/渠道</th>
+<th class="px-4 py-3 tenant-col">所属租户</th>
+<th class="px-4 py-3">意向分</th>
+<th class="px-4 py-3">状态</th>
+<th class="px-4 py-3">跟进人</th>
+<th class="px-4 py-3">操作</th>
+</tr>
+</thead>
+<tbody id="leadsTableBody">
+<tr>
+<td class="px-4 py-4 font-medium">爱生活的Lily</td>
+<td class="px-4 py-4 font-mono">138****9901</td>
+<td class="px-4 py-4">
+<div class="text-xs text-[#409eff] truncate w-40">"这款护肤品怎么代理？"</div>
+<div class="text-[10px] text-gray-400">来源：小红书</div>
+</td>
+<td class="px-4 py-4 tenant-col">广州悦享科技</td>
+<td class="px-4 py-4 text-red-500 font-bold">95</td>
+<td class="px-4 py-4"><span class="px-2 py-0.5 bg-green-50 text-green-600 rounded text-xs">已接洽</span></td>
+<td class="px-4 py-4 text-gray-500">张三(业务员A)</td>
+<td class="px-4 py-4">
+<div class="flex gap-3">
+<button class="text-[#409eff] hover:underline">详情</button>
+<button class="text-[#409eff] hover:underline action-btn">打标</button>
+</div>
+</td>
+</tr>
+<tr>
+<td class="px-4 py-4 font-medium">科技发烧友</td>
+<td class="px-4 py-4 font-mono">155****8822</td>
+<td class="px-4 py-4">
+<div class="text-xs text-[#409eff] truncate w-40">"求批发价，私我"</div>
+<div class="text-[10px] text-gray-400">来源：抖音</div>
+</td>
+<td class="px-4 py-4 tenant-col">上海晨风服饰</td>
+<td class="px-4 py-4 text-orange-500 font-bold">82</td>
+<td class="px-4 py-4"><span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-xs">未处理</span></td>
+<td class="px-4 py-4 text-gray-500">李四(业务员B)</td>
+<td class="px-4 py-4">
+<div class="flex gap-3">
+<button class="text-[#409eff] hover:underline">详情</button>
+<button class="text-[#409eff] hover:underline action-btn">打标</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</main>
+</div>
+<script>
+        function updateSidebar() {
+            const role = localStorage.getItem('currentRole') || 'super_admin';
+            const sidebarItems = document.querySelectorAll('.sidebar-item');
+            
+            // 首先显示所有项，防止全部消失
+            sidebarItems.forEach(item => {
+                item.style.display = 'flex';
+            });
+            
+            // 定义不同角色需要隐藏的项 (基于文件名)
+            const hideConfig = {
+                'super_admin': [],
+                'tenant_admin': ['tenant_management.html', 'proxy_ip.html', 'settings.html'],
+                'operator': ['tenant_management.html', 'social_accounts.html', 'crawler_tasks.html', 'proxy_ip.html', 'ai_config.html', 'settings.html']
+            };
+            
+            const toHide = hideConfig[role] || [];
+            
+            sidebarItems.forEach(item => {
+                const href = item.getAttribute('href');
+                if (href) {
+                    const fileName = href.split('/').pop();
+                    if (toHide.includes(fileName)) {
+                        item.style.display = 'none';
+                    }
+                }
+            });
+        }
+        function updateRoleUI() {
+            const role = localStorage.getItem('currentRole') || 'super_admin';
+            const roleSelect = document.getElementById('roleSelect');
+            if (roleSelect) roleSelect.value = role;
+            const roleLabel = document.getElementById('roleLabel');
+            if (roleLabel) {
+                const roles = {
+                    'super_admin': { text: '超级管理员', class: 'text-blue-500 bg-blue-50' },
+                    'tenant_admin': { text: '租户管理员', class: 'text-green-500 bg-green-50' },
+                    'operator': { text: '业务员', class: 'text-orange-500 bg-orange-50' }
+                };
+                roleLabel.innerText = roles[role].text;
+                roleLabel.className = `text-[10px] px-1.5 py-0.5 rounded ${roles[role].class} leading-tight font-medium`;
+            }
+        }
+        function updatePageContent() {
+            const role = localStorage.getItem('currentRole') || 'super_admin';
+            const roleContext = document.getElementById('roleContext');
+            const tenantSelect = document.getElementById('tenantSelect');
+            const rows = document.getElementById('leadsTableBody').rows;
+
+            if (role === 'tenant_admin') {
+                tenantSelect.style.display = 'none';
+                roleContext.innerText = '(当前租户：广州悦享科技有限公司)';
+                document.querySelectorAll('.tenant-col').forEach(el => el.style.display = 'none');
+                rows[1].style.display = 'none';
+            } else if (role === 'operator') {
+                tenantSelect.style.display = 'none';
+                roleContext.innerText = '(当前查看：个人跟进线索)';
+                document.querySelectorAll('.tenant-col').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('.action-btn').forEach(el => {
+                    el.disabled = true;
+                    el.className = 'text-gray-400 cursor-not-allowed';
+                });
+                rows[1].style.display = 'none';
+            }
+        }
+        function changeRole(role) {
+            localStorage.setItem('currentRole', role);
+            location.reload();
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            updateSidebar();
+            updateRoleUI();
+            updatePageContent();
+        });
+    </script>
+</body>
+</html>

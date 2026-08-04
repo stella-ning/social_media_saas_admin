@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>首页仪表盘 - 社媒AI自动化SaaS平台</title>
+<script src="https://modao.cc/agent-py/static/source/js/tailwindcss.js"></script>
+<script src="https://modao.cc/agent-py/static/source/js/iconify-icon.min.js"></script>
+<script src="https://modao.cc/agent-py/static/source/js/echarts.min.js"></script>
+<style>
+        body { background-color: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .sidebar-item:hover { background-color: #263445; }
+        .sidebar-item.active { color: #409eff; background-color: #263445; }
+        .el-card { background: white; border-radius: 4px; border: 1px solid #ebeef5; box-shadow: 0 2px 12px 0 rgba(0,0,0,.1); }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+<!-- 侧边栏 -->
+<aside class="w-[240px] bg-[#304156] flex-none flex flex-col">
+<div class="h-[60px] flex items-center px-6 gap-3 border-b border-[#1f2d3d]">
+<iconify-icon class="text-2xl text-[#409eff]" icon="ri:robot-fill"></iconify-icon>
+<span class="text-white font-bold tracking-tight">SocialAI SaaS</span>
+</div>
+<nav class="flex-1 overflow-y-auto py-4" id="sidebarNav">
+<a class="sidebar-item active flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="dashboard.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:dashboard-3-line"></iconify-icon>
+<span class="text-sm">首页仪表盘</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="tenant_management.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:building-4-line"></iconify-icon>
+<span class="text-sm">租户管理</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="social_accounts.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:share-box-line"></iconify-icon>
+<span class="text-sm">社媒账号管理</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="crawler_tasks.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:robot-line"></iconify-icon>
+<span class="text-sm">爬虫任务管理</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="proxy_ip.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:global-line"></iconify-icon>
+<span class="text-sm">代理IP管理</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="ai_config.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:brain-line"></iconify-icon>
+<span class="text-sm">AI配置中心</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="crm_leads.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:user-search-line"></iconify-icon>
+<span class="text-sm">CRM客户线索</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="messages.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:message-3-line"></iconify-icon>
+<span class="text-sm">消息会话管理</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="settings.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:settings-4-line"></iconify-icon>
+<span class="text-sm">系统设置</span>
+</a>
+</nav>
+<div class="p-4 border-t border-[#1f2d3d] text-[#bfcbd9] text-xs text-center">
+            v1.0.0 Stable
+        </div>
+</aside>
+<!-- 主内容区 -->
+<div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+<!-- 顶部栏 -->
+<header class="h-[60px] bg-white border-b border-[#e6e6e6] flex items-center justify-between px-6 flex-none">
+<div class="flex items-center text-gray-500">
+<iconify-icon class="text-xl cursor-pointer mr-4" icon="ri:menu-fold-line"></iconify-icon>
+<div class="flex items-center text-sm">
+<span class="text-gray-400">首页</span>
+<span class="mx-2">/</span>
+<span class="text-gray-700 font-medium">仪表盘</span>
+<span class="ml-4 text-blue-500 font-normal" id="roleContext"></span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<!-- 角色切换 -->
+<div class="flex items-center gap-2 border-r pr-4">
+<span class="text-xs text-gray-400">切换角色:</span>
+<select class="text-sm border border-gray-300 rounded px-2 py-1 outline-none focus:border-[#409eff]" id="roleSelect" onchange="changeRole(this.value)">
+<option value="super_admin">超级管理员</option>
+<option value="tenant_admin">租户管理员</option>
+<option value="operator">业务员子账号</option>
+</select>
+</div>
+<div class="relative">
+<iconify-icon class="text-xl text-gray-500 cursor-pointer" icon="ri:notification-3-line"></iconify-icon>
+<span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] flex items-center justify-center rounded-full border border-white">12</span>
+</div>
+<div class="flex items-center gap-2 cursor-pointer">
+<img alt="Admin Avatar" class="w-8 h-8 rounded-full border" src="https://modao.cc/agent-py/media/generated_images/2026-06-30/009eb25069a248f28949db06c3781b9f.jpg"/>
+<div class="flex flex-col">
+<span class="text-sm font-medium text-gray-700 leading-tight">Admin</span>
+<span class="text-[10px] leading-tight font-medium px-1 rounded" id="roleLabel"></span>
+</div>
+<iconify-icon class="text-gray-400" icon="ri:arrow-down-s-line"></iconify-icon>
+</div>
+</div>
+</header>
+<!-- 内容滚动区 -->
+<main class="flex-1 overflow-y-auto p-6 space-y-6">
+<!-- 统计卡片 -->
+<div class="grid grid-cols-4 gap-6" id="statsCards">
+<div class="el-card p-5 flex items-center justify-between" id="card-tasks">
+<div>
+<p class="text-gray-400 text-sm mb-1">今日任务数</p>
+<h3 class="text-2xl font-bold text-gray-800">1,284</h3>
+<p class="text-xs text-green-500 mt-2 flex items-center"><iconify-icon class="mr-1" icon="ri:arrow-right-up-line"></iconify-icon> 12% 较昨日</p>
+</div>
+<div class="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center text-blue-500 text-2xl">
+<iconify-icon icon="ri:task-line"></iconify-icon>
+</div>
+</div>
+<div class="el-card p-5 flex items-center justify-between" id="card-leads">
+<div>
+<p class="text-gray-400 text-sm mb-1">累计采集线索</p>
+<h3 class="text-2xl font-bold text-gray-800">45,892</h3>
+<p class="text-xs text-green-500 mt-2 flex items-center"><iconify-icon class="mr-1" icon="ri:arrow-right-up-line"></iconify-icon> 8.5% 较上周</p>
+</div>
+<div class="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center text-green-500 text-2xl">
+<iconify-icon icon="ri:user-search-line"></iconify-icon>
+</div>
+</div>
+<div class="el-card p-5 flex items-center justify-between" id="card-consult">
+<div>
+<p class="text-gray-400 text-sm mb-1">有效咨询量</p>
+<h3 class="text-2xl font-bold text-gray-800">8,231</h3>
+<p class="text-xs text-green-500 mt-2 flex items-center"><iconify-icon class="mr-1" icon="ri:arrow-right-up-line"></iconify-icon> 15% 较昨日</p>
+</div>
+<div class="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center text-purple-500 text-2xl">
+<iconify-icon icon="ri:chat-quote-line"></iconify-icon>
+</div>
+</div>
+<div class="el-card p-5 flex items-center justify-between" id="card-intent">
+<div>
+<p class="text-gray-400 text-sm mb-1">高意向客户数</p>
+<h3 class="text-2xl font-bold text-gray-800">1,542</h3>
+<p class="text-xs text-orange-500 mt-2 flex items-center"><iconify-icon class="mr-1" icon="ri:arrow-right-up-line"></iconify-icon> 22% 较上周</p>
+</div>
+<div class="w-12 h-12 bg-orange-50 rounded-lg flex items-center justify-center text-orange-500 text-2xl">
+<iconify-icon icon="ri:vip-crown-line"></iconify-icon>
+</div>
+</div>
+</div>
+<!-- 图表区域 -->
+<div class="grid grid-cols-2 gap-6">
+<div class="el-card p-6" id="chart-trends-container">
+<h4 class="text-base font-bold text-gray-800 mb-6">任务趋势图</h4>
+<div id="tasksTrendChart" style="width: 100%; height: 300px;"></div>
+</div>
+<div class="el-card p-6">
+<h4 class="text-base font-bold text-gray-800 mb-6">客户意向分布图</h4>
+<div id="intentPieChart" style="width: 100%; height: 300px;"></div>
+</div>
+</div>
+<div class="el-card p-6" id="chart-sources-container">
+<h4 class="text-base font-bold text-gray-800 mb-6">渠道来源分布图</h4>
+<div id="sourceBarChart" style="width: 100%; height: 350px;"></div>
+</div>
+</main>
+</div>
+<script>
+function updateSidebar() {
+    const role = localStorage.getItem('currentRole') || 'super_admin';
+    const sidebarItems = document.querySelectorAll('.sidebar-item');
+    
+    // 首先显示所有项，防止全部消失
+    sidebarItems.forEach(item => {
+        item.style.display = 'flex';
+    });
+    
+    // 定义不同角色需要隐藏的项 (基于文件名)
+    const hideConfig = {
+        'super_admin': [],
+        'tenant_admin': ['tenant_management.html', 'proxy_ip.html', 'settings.html'],
+        'operator': ['tenant_management.html', 'social_accounts.html', 'crawler_tasks.html', 'proxy_ip.html', 'ai_config.html', 'settings.html']
+    };
+    
+    const toHide = hideConfig[role] || [];
+    
+    sidebarItems.forEach(item => {
+        const href = item.getAttribute('href');
+        if (href) {
+            const fileName = href.split('/').pop();
+            if (toHide.includes(fileName)) {
+                item.style.display = 'none';
+            }
+        }
+    });
+}
+
+function updateRoleUI() {
+    const role = localStorage.getItem('currentRole') || 'super_admin';
+    const roleSelect = document.getElementById('roleSelect');
+    if (roleSelect) roleSelect.value = role;
+    
+    const roleLabel = document.getElementById('roleLabel');
+    if (roleLabel) {
+        const roles = {
+            'super_admin': { text: '超级管理员', class: 'text-blue-500 bg-blue-50' },
+            'tenant_admin': { text: '租户管理员', class: 'text-green-500 bg-green-50' },
+            'operator': { text: '业务员', class: 'text-orange-500 bg-orange-50' }
+        };
+        roleLabel.innerText = roles[role].text;
+        roleLabel.className = `text-[10px] px-1.5 py-0.5 rounded ${roles[role].class} leading-tight font-medium`;
+    }
+
+    const roleContext = document.getElementById('roleContext');
+    if (roleContext) {
+        if (role === 'tenant_admin') roleContext.innerText = '(当前查看：广州悦享科技有限公司)';
+        else if (role === 'operator') roleContext.innerText = '(当前查看：个人跟进数据)';
+        else roleContext.innerText = '';
+    }
+}
+
+function updatePageContent() {
+    const role = localStorage.getItem('currentRole') || 'super_admin';
+    if (role === 'operator') {
+        document.getElementById('card-tasks').style.display = 'none';
+        document.getElementById('card-leads').style.display = 'none';
+        document.getElementById('chart-trends-container').style.display = 'none';
+        document.getElementById('chart-sources-container').style.display = 'none';
+        
+        // 调整网格布局
+        document.getElementById('statsCards').className = 'grid grid-cols-2 gap-6';
+        document.getElementById('chart-trends-container').parentElement.className = 'grid grid-cols-1 gap-6';
+    }
+}
+
+function changeRole(role) {
+    localStorage.setItem('currentRole', role);
+    location.reload();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    updateSidebar();
+    updateRoleUI();
+    updatePageContent();
+    
+    // 初始化图表
+    initCharts();
+});
+
+function initCharts() {
+    const role = localStorage.getItem('currentRole') || 'super_admin';
+    
+    // 趋势图
+    if (document.getElementById('tasksTrendChart') && role !== 'operator') {
+        const tasksChart = echarts.init(document.getElementById('tasksTrendChart'));
+        tasksChart.setOption({
+            tooltip: { trigger: 'axis' },
+            legend: { data: ['全网采集', '自动评论', '私信互动'], bottom: 0 },
+            grid: { top: 40, left: 40, right: 20, bottom: 40 },
+            xAxis: { type: 'category', data: ['07-11', '07-12', '07-13', '07-14', '07-15', '07-16', '07-17'] },
+            yAxis: { type: 'value' },
+            series: [
+                { name: '全网采集', type: 'line', smooth: true, data: [120, 132, 101, 134, 90, 230, 210], color: '#409eff' },
+                { name: '自动评论', type: 'line', smooth: true, data: [220, 182, 191, 234, 290, 330, 310], color: '#67c23a' },
+                { name: '私信互动', type: 'line', smooth: true, data: [150, 232, 201, 154, 190, 330, 410], color: '#e6a23c' }
+            ]
+        });
+    }
+
+    // 意向饼图
+    if (document.getElementById('intentPieChart')) {
+        const intentChart = echarts.init(document.getElementById('intentPieChart'));
+        intentChart.setOption({
+            tooltip: { trigger: 'item' },
+            legend: { orient: 'vertical', left: 'left' },
+            series: [{
+                type: 'pie',
+                radius: '70%',
+                data: [
+                    { value: 1048, name: '高意向', itemStyle: { color: '#f56c6c' } },
+                    { value: 735, name: '中意向', itemStyle: { color: '#e6a23c' } },
+                    { value: 580, name: '低意向', itemStyle: { color: '#409eff' } },
+                    { value: 484, name: '无意向', itemStyle: { color: '#909399' } }
+                ]
+            }]
+        });
+    }
+
+    // 渠道图
+    if (document.getElementById('sourceBarChart') && role !== 'operator') {
+        const sourceChart = echarts.init(document.getElementById('sourceBarChart'));
+        sourceChart.setOption({
+            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+            grid: { top: 40, left: 50, right: 20, bottom: 40 },
+            xAxis: { type: 'category', data: ['小红书', '抖音', '视频号'] },
+            yAxis: { type: 'value' },
+            series: [
+                { name: '采集量', type: 'bar', barWidth: '40%', data: [12400, 15800, 9600], color: '#409eff' }
+            ]
+        });
+    }
+}
+</script>
+</body>
+</html>

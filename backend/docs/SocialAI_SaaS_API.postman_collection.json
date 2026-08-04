@@ -1,0 +1,255 @@
+{
+  "info": {
+    "_postman_id": "social-ai-saas-api-001",
+    "name": "SocialAI SaaS API",
+    "description": "SocialAI 社媒采集运营后台 · Laravel 11 + Sanctum\n统一响应：{ code, msg, data }\n演示账号：admin / yx_admin / zhangsan，密码 password123",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8000/api" },
+    { "key": "token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "登录",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data.token) {",
+                  "  pm.collectionVariables.set('token', json.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "当前用户",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/auth/me"
+          }
+        },
+        {
+          "name": "退出",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/auth/logout"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "概览统计",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/dashboard/overview"
+          }
+        },
+        {
+          "name": "刷新缓存",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/dashboard/refresh"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tenants",
+      "item": [
+        {
+          "name": "统计",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/tenants/stats"
+          }
+        },
+        {
+          "name": "列表",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/tenants?page=1&size=10&keyword=&status=&package="
+          }
+        },
+        {
+          "name": "新增",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"测试租户有限公司\",\n  \"contact\": \"王测试\",\n  \"phone\": \"13800001111\",\n  \"email\": \"test@example.com\",\n  \"package\": \"pro\",\n  \"remark\": \"演示\"\n}"
+            },
+            "url": "{{baseUrl}}/tenants"
+          }
+        },
+        {
+          "name": "启停",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": 0\n}" },
+            "url": "{{baseUrl}}/tenants/1/toggle"
+          }
+        },
+        {
+          "name": "套餐配额",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"package\": \"ent\",\n  \"concurrent\": 50,\n  \"aiQuota\": 50000,\n  \"binds\": 30,\n  \"kb\": 50\n}"
+            },
+            "url": "{{baseUrl}}/tenants/1/package"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Resources",
+      "item": [
+        {
+          "name": "社媒账号列表",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/social-accounts?page=1&size=10&tenantId="
+          }
+        },
+        {
+          "name": "绑定社媒账号",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"新绑定账号_抖音\",\n  \"uid\": \"9988776\",\n  \"platform\": \"抖音\",\n  \"cookie\": \"demo_token\",\n  \"bindIp\": \"123.56.xx.102\",\n  \"tenantId\": 1\n}"
+            },
+            "url": "{{baseUrl}}/social-accounts"
+          }
+        },
+        {
+          "name": "爬虫任务列表",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/crawler-tasks?page=1&size=10"
+          }
+        },
+        {
+          "name": "新建爬虫任务",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"竞品监控\",\n  \"platform\": \"小红书\",\n  \"taskType\": \"keyword\",\n  \"keywords\": \"护肤品, 祛痘\",\n  \"frequency\": \"每2小时\",\n  \"dailyLimit\": 500,\n  \"tenantId\": 1\n}"
+            },
+            "url": "{{baseUrl}}/crawler-tasks"
+          }
+        },
+        {
+          "name": "代理IP列表",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/proxy-ips"
+          }
+        },
+        {
+          "name": "导入代理IP",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"list\": \"123.56.78.102:8080:user:pass\\n47.100.23.45:3128\",\n  \"location\": \"深圳机房\"\n}"
+            },
+            "url": "{{baseUrl}}/proxy-ips/import"
+          }
+        }
+      ]
+    },
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "AI模板列表",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/ai-config/templates?tenantId=1"
+          }
+        },
+        {
+          "name": "CRM线索列表",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/crm-leads?page=1&size=10&intent="
+          }
+        },
+        {
+          "name": "消息会话列表",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/messages/sessions"
+          }
+        },
+        {
+          "name": "系统基本设置",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/settings/basic"
+          }
+        }
+      ]
+    }
+  ]
+}

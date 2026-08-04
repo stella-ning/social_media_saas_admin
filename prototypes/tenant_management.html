@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>租户管理 - 社媒AI自动化SaaS平台</title>
+<script src="https://modao.cc/agent-py/static/source/js/tailwindcss.js"></script>
+<script src="https://modao.cc/agent-py/static/source/js/iconify-icon.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<style>
+        body { background-color: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .sidebar-item:hover { background-color: #263445; }
+        .sidebar-item.active { color: #409eff; background-color: #263445; }
+        .el-button { transition: .1s; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; border: 1px solid #dcdfe6; background: white; color: #606266; padding: 8px 15px; font-size: 14px; }
+        .el-button-primary { background-color: #409eff; border-color: #409eff; color: white; }
+        .el-button-primary:hover { background-color: #66b1ff; border-color: #66b1ff; color: white; }
+        .el-button-text { border: none; background: transparent; color: #409eff; padding: 0 5px; }
+        .el-button-text:hover { color: #66b1ff; text-decoration: underline; }
+        
+        .el-table th { background-color: #f5f7fa; color: #909399; font-weight: 600; font-size: 14px; }
+        .el-table td { border-bottom: 1px solid #ebeef5; padding: 12px 0; color: #606266; font-size: 14px; }
+        .el-table tr:hover { background-color: #f5f7fa; }
+        
+        .el-tag { padding: 2px 8px; border-radius: 4px; font-size: 12px; border: 1px solid transparent; display: inline-block; }
+        .tag-basic { background-color: #ecf5ff; border-color: #d9ecff; color: #409eff; }
+        .tag-pro { background-color: #f3e8ff; border-color: #e9d5ff; color: #722ed1; }
+        .tag-ent { background-color: #fff7e6; border-color: #ffe7ba; color: #faad14; }
+        
+        /* Switch 风格 */
+        .el-switch { position: relative; display: inline-block; width: 40px; height: 20px; vertical-align: middle; }
+        .el-switch-input { opacity: 0; width: 0; height: 0; }
+        .el-switch-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #dcdfe6; transition: .4s; border-radius: 20px; }
+        .el-switch-slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .el-switch-slider { background-color: #67c23a; }
+        input:checked + .el-switch-slider:before { transform: translateX(20px); }
+
+        .modal-overlay { background-color: rgba(0, 0, 0, 0.5); display: none; }
+        
+        /* Slider 样式 */
+        .slider-container { display: flex; align-items: center; gap: 15px; }
+        input[type=range] { flex: 1; accent-color: #409eff; }
+        
+        .tooltip { position: relative; display: inline-block; cursor: help; }
+        .tooltip .tooltiptext { visibility: hidden; width: 180px; background-color: #303133; color: #fff; text-align: left; border-radius: 6px; padding: 10px; position: absolute; z-index: 10; bottom: 125%; left: 50%; margin-left: -90px; opacity: 0; transition: opacity 0.3s; font-size: 12px; line-height: 1.5; box-shadow: 0 2px 12px 0 rgba(0,0,0,.1); }
+        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+<!-- 侧边栏 -->
+<aside class="w-[240px] bg-[#304156] flex-none flex flex-col">
+<div class="h-[60px] flex items-center px-6 gap-3 border-b border-[#1f2d3d]">
+<iconify-icon class="text-2xl text-[#409eff]" icon="ri:robot-fill"></iconify-icon>
+<span class="text-white font-bold tracking-tight">SocialAI SaaS</span>
+</div>
+<nav class="flex-1 overflow-y-auto py-4">
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="dashboard.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:dashboard-3-line"></iconify-icon>
+<span class="text-sm">首页仪表盘</span>
+</a>
+<a class="sidebar-item active flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="tenant_management.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:building-4-line"></iconify-icon>
+<span class="text-sm">租户管理</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="social_accounts.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:share-box-line"></iconify-icon>
+<span class="text-sm">社媒账号管理</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="crawler_tasks.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:robot-line"></iconify-icon>
+<span class="text-sm">爬虫任务管理</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="proxy_ip.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:global-line"></iconify-icon>
+<span class="text-sm">代理IP管理</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="ai_config.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:brain-line"></iconify-icon>
+<span class="text-sm">AI配置中心</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="crm_leads.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:user-search-line"></iconify-icon>
+<span class="text-sm">CRM客户线索</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="messages.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:message-3-line"></iconify-icon>
+<span class="text-sm">消息会话管理</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="settings.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:settings-4-line"></iconify-icon>
+<span class="text-sm">系统设置</span>
+</a>
+</nav>
+</aside>
+<div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+<!-- 顶部栏 -->
+<header class="h-[60px] bg-white border-b border-[#e6e6e6] flex items-center justify-between px-6 flex-none">
+<div class="flex items-center text-gray-500">
+<iconify-icon class="text-xl cursor-pointer mr-4" icon="ri:menu-fold-line"></iconify-icon>
+<div class="flex items-center text-sm">
+<span class="text-gray-400">系统管理</span>
+<span class="mx-2">/</span>
+<span class="text-gray-700 font-medium">租户管理</span>
+<span class="ml-4 px-2 py-0.5 bg-blue-100 text-[#409eff] text-[10px] rounded font-medium">仅超级管理员可见</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 border-r pr-4">
+<span class="text-xs text-gray-400">切换角色:</span>
+<select class="text-sm border border-gray-300 rounded px-2 py-1 outline-none focus:border-[#409eff]" id="roleSelect" onchange="changeRole(this.value)">
+<option value="super_admin">超级管理员</option>
+<option value="tenant_admin">租户管理员</option>
+<option value="operator">业务员子账号</option>
+</select>
+</div>
+<div class="flex items-center gap-2">
+<img class="w-8 h-8 rounded-full border" src="/agent-py/static/source/images/placeholder.svg"/>
+<div class="flex flex-col">
+<span class="text-sm font-medium text-gray-700 leading-tight">Admin</span>
+<span class="text-[10px] leading-tight font-medium px-1 rounded" id="roleLabel">超级管理员</span>
+</div>
+</div>
+</div>
+</header>
+<!-- 内容区 -->
+<main class="flex-1 overflow-y-auto p-6 space-y-6">
+<!-- 统计卡片 -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+<div class="bg-white p-6 rounded shadow-sm border border-[#ebeef5] flex items-center justify-between">
+<div>
+<div class="text-sm text-gray-400 mb-1">总租户数</div>
+<div class="text-2xl font-bold text-gray-800">128</div>
+</div>
+<div class="w-12 h-12 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center">
+<iconify-icon class="text-2xl" icon="ri:building-line"></iconify-icon>
+</div>
+</div>
+<div class="bg-white p-6 rounded shadow-sm border border-[#ebeef5] flex items-center justify-between">
+<div>
+<div class="text-sm text-gray-400 mb-1">启用租户</div>
+<div class="text-2xl font-bold text-gray-800">112</div>
+</div>
+<div class="w-12 h-12 bg-green-50 text-green-500 rounded-full flex items-center justify-center">
+<iconify-icon class="text-2xl" icon="ri:checkbox-circle-line"></iconify-icon>
+</div>
+</div>
+<div class="bg-white p-6 rounded shadow-sm border border-[#ebeef5] flex items-center justify-between">
+<div>
+<div class="text-sm text-gray-400 mb-1">今日新增</div>
+<div class="text-2xl font-bold text-gray-800">5</div>
+</div>
+<div class="w-12 h-12 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center">
+<iconify-icon class="text-2xl" icon="ri:user-add-line"></iconify-icon>
+</div>
+</div>
+<div class="bg-white p-6 rounded shadow-sm border border-[#ebeef5] flex items-center justify-between">
+<div>
+<div class="text-sm text-gray-400 mb-1">本月活跃</div>
+<div class="text-2xl font-bold text-gray-800">96</div>
+</div>
+<div class="w-12 h-12 bg-purple-50 text-purple-500 rounded-full flex items-center justify-center">
+<iconify-icon class="text-2xl" icon="ri:pulse-line"></iconify-icon>
+</div>
+</div>
+</div>
+<div class="bg-white rounded p-6 shadow-sm border border-[#ebeef5]">
+<!-- 搜索与操作栏 -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between mb-6 gap-4">
+<div class="flex flex-wrap items-center gap-4">
+<input class="border border-gray-300 rounded px-3 py-2 text-sm w-48 lg:w-64 outline-none focus:border-[#409eff]" placeholder="租户名称/联系人" type="text"/>
+<select class="border border-gray-300 rounded px-3 py-2 text-sm w-32 outline-none focus:border-[#409eff]">
+<option value="">所有状态</option>
+<option value="1">已启用</option>
+<option value="0">已禁用</option>
+</select>
+<select class="border border-gray-300 rounded px-3 py-2 text-sm w-32 outline-none focus:border-[#409eff]">
+<option value="">所有套餐</option>
+<option value="basic">基础版</option>
+<option value="pro">专业版</option>
+<option value="ent">企业版</option>
+</select>
+<div class="flex gap-2">
+<button class="el-button bg-[#409eff] text-white border-[#409eff] hover:bg-[#66b1ff]">搜索</button>
+<button class="el-button bg-white text-gray-600 border-gray-300 hover:bg-gray-50">重置</button>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="el-button bg-gray-50 text-gray-600 border-gray-300 hover:bg-white" disabled="" id="batchBtn">
+                            批量操作 <iconify-icon class="ml-1" icon="ri:arrow-down-s-line"></iconify-icon>
+</button>
+<button class="el-button bg-white text-gray-600 border-gray-300 hover:bg-gray-50">
+<iconify-icon class="mr-1" icon="ri:download-2-line"></iconify-icon> 导出
+                        </button>
+<button class="el-button-primary px-4 py-2 rounded text-sm flex items-center gap-1" onclick="openModal('addTenantModal')">
+<iconify-icon icon="ri:add-line"></iconify-icon> 新增租户
+                        </button>
+</div>
+</div>
+<!-- 表格 -->
+<div class="overflow-x-auto">
+<table class="w-full el-table min-w-[1000px]">
+<thead>
+<tr class="text-left">
+<th class="w-12 px-4 py-3 text-center">
+<input class="rounded" onchange="toggleSelectAll(this)" type="checkbox"/>
+</th>
+<th class="px-4 py-3">租户信息</th>
+<th class="px-4 py-3">联系方式</th>
+<th class="px-4 py-3">套餐类型</th>
+<th class="px-4 py-3">配额详情</th>
+<th class="px-4 py-3">创建时间</th>
+<th class="px-4 py-3 text-center">状态</th>
+<th class="px-4 py-3 text-right">操作</th>
+</tr>
+</thead>
+<tbody id="tenantList">
+<!-- JS 动态填充 -->
+</tbody>
+</table>
+</div>
+<!-- 分页 -->
+<div class="mt-6 flex items-center justify-between">
+<div class="text-sm text-gray-500">共 128 条记录，每页 10 条</div>
+<div class="flex border rounded overflow-hidden text-sm">
+<button class="px-3 py-1 bg-gray-50 hover:bg-gray-100 border-r text-gray-400">上一页</button>
+<button class="px-3 py-1 bg-[#409eff] text-white border-r">1</button>
+<button class="px-3 py-1 bg-white hover:bg-gray-100 border-r text-gray-600">2</button>
+<button class="px-3 py-1 bg-white hover:bg-gray-100 border-r text-gray-600">3</button>
+<button class="px-3 py-1 bg-white hover:bg-gray-100 border-r text-gray-600">...</button>
+<button class="px-3 py-1 bg-white hover:bg-gray-100 border-r text-gray-600">13</button>
+<button class="px-3 py-1 bg-gray-50 hover:bg-gray-100 text-gray-600">下一页</button>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- 弹窗：新增租户 -->
+<div class="modal-overlay fixed inset-0 z-50 flex items-center justify-center" id="addTenantModal">
+<div class="bg-white rounded-lg shadow-xl w-[500px] max-h-[90vh] overflow-y-auto animate__animated animate__fadeInDown">
+<div class="flex items-center justify-between px-6 py-4 border-b">
+<h3 class="font-bold text-gray-700">新增租户</h3>
+<button class="text-gray-400 hover:text-gray-600" onclick="closeModal('addTenantModal')">
+<iconify-icon class="text-xl" icon="ri:close-line"></iconify-icon>
+</button>
+</div>
+<div class="p-6 space-y-4">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">租户名称 <span class="text-red-500">*</span></label>
+<input class="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:border-[#409eff]" placeholder="请输入公司或机构名称" type="text"/>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">联系人 <span class="text-red-500">*</span></label>
+<input class="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:border-[#409eff]" placeholder="负责人姓名" type="text"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">联系电话</label>
+<input class="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:border-[#409eff]" placeholder="手机号" type="text"/>
+</div>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
+<input class="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:border-[#409eff]" placeholder="email@example.com" type="email"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">选择套餐</label>
+<select class="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:border-[#409eff]" id="addPackageSelect" onchange="updateAddQuotaInfo(this.value)">
+<option value="basic">基础版</option>
+<option value="pro">专业版</option>
+<option value="ent">企业版</option>
+</select>
+</div>
+<div class="bg-gray-50 p-3 rounded text-xs text-gray-500 space-y-1 border border-gray-100" id="addQuotaPreview">
+<div>任务并发：5个</div>
+<div>AI调用：1,000次/月</div>
+<div>账号绑定：5个</div>
+<div>知识库：1GB</div>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">备注</label>
+<textarea class="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:border-[#409eff] h-20 resize-none" placeholder="备注信息"></textarea>
+</div>
+</div>
+<div class="px-6 py-4 border-t bg-gray-50 flex justify-end gap-3 rounded-b-lg">
+<button class="el-button border-gray-300 hover:bg-white px-6" onclick="closeModal('addTenantModal')">取消</button>
+<button class="el-button-primary px-6" onclick="saveTenant('add')">立即创建</button>
+</div>
+</div>
+</div>
+<!-- 弹窗：编辑租户 -->
+<div class="modal-overlay fixed inset-0 z-50 flex items-center justify-center" id="editTenantModal">
+<div class="bg-white rounded-lg shadow-xl w-[500px] max-h-[90vh] overflow-y-auto">
+<div class="flex items-center justify-between px-6 py-4 border-b">
+<h3 class="font-bold text-gray-700">编辑租户：<span id="editTenantTitle"></span></h3>
+<button class="text-gray-400 hover:text-gray-600" onclick="closeModal('editTenantModal')">
+<iconify-icon class="text-xl" icon="ri:close-line"></iconify-icon>
+</button>
+</div>
+<div class="p-6 space-y-4">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">租户名称 <span class="text-red-500">*</span></label>
+<input class="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:border-[#409eff]" id="editName" type="text"/>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">联系人 <span class="text-red-500">*</span></label>
+<input class="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:border-[#409eff]" id="editContact" type="text"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">联系电话</label>
+<input class="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:border-[#409eff]" id="editPhone" type="text"/>
+</div>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
+<input class="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:border-[#409eff]" id="editEmail" type="email"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">备注</label>
+<textarea class="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:border-[#409eff] h-20 resize-none" id="editRemark"></textarea>
+</div>
+</div>
+<div class="px-6 py-4 border-t bg-gray-50 flex justify-end gap-3 rounded-b-lg">
+<button class="el-button border-gray-300 hover:bg-white px-6" onclick="closeModal('editTenantModal')">取消</button>
+<button class="el-button-primary px-6" onclick="saveTenant('edit')">保存修改</button>
+</div>
+</div>
+</div>
+<!-- 弹窗：套餐配置 -->
+<div class="modal-overlay fixed inset-0 z-50 flex items-center justify-center" id="packageConfigModal">
+<div class="bg-white rounded-lg shadow-xl w-[550px] max-h-[90vh] overflow-y-auto">
+<div class="flex items-center justify-between px-6 py-4 border-b">
+<div class="flex items-center gap-2">
+<h3 class="font-bold text-gray-700">套餐配置</h3>
+<span class="text-sm text-gray-400" id="configTenantName"></span>
+</div>
+<button class="text-gray-400 hover:text-gray-600" onclick="closeModal('packageConfigModal')">
+<iconify-icon class="text-xl" icon="ri:close-line"></iconify-icon>
+</button>
+</div>
+<div class="p-6 space-y-8">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-3">当前套餐等级</label>
+<select class="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:border-[#409eff]">
+<option value="basic">基础版</option>
+<option value="pro">专业版</option>
+<option value="ent">企业版</option>
+</select>
+</div>
+<div class="space-y-6">
+<div>
+<div class="flex justify-between items-center mb-2">
+<label class="text-sm font-medium text-gray-700 flex items-center gap-1">
+<iconify-icon class="text-blue-500" icon="ri:speed-mini-line"></iconify-icon> 任务并发数
+                            </label>
+<span class="text-sm font-bold text-[#409eff]"><span id="concurrentVal">10</span> 个</span>
+</div>
+<div class="slider-container">
+<span class="text-xs text-gray-400">1</span>
+<input max="100" min="1" oninput="document.getElementById('concurrentVal').innerText = this.value" type="range" value="10"/>
+<span class="text-xs text-gray-400">100</span>
+</div>
+</div>
+<div>
+<div class="flex justify-between items-center mb-2">
+<label class="text-sm font-medium text-gray-700 flex items-center gap-1">
+<iconify-icon class="text-purple-500" icon="ri:robot-2-line"></iconify-icon> AI调用额度/月
+                            </label>
+<span class="text-sm font-bold text-[#409eff]"><span id="aiQuotaVal">5000</span> 次</span>
+</div>
+<div class="slider-container">
+<span class="text-xs text-gray-400">1k</span>
+<input max="100000" min="1000" oninput="document.getElementById('aiQuotaVal').innerText = this.value" step="1000" type="range" value="5000"/>
+<span class="text-xs text-gray-400">100k</span>
+</div>
+</div>
+<div>
+<div class="flex justify-between items-center mb-2">
+<label class="text-sm font-medium text-gray-700 flex items-center gap-1">
+<iconify-icon class="text-orange-500" icon="ri:links-line"></iconify-icon> 账号绑定数量
+                            </label>
+<span class="text-sm font-bold text-[#409eff]"><span id="bindLimitVal">10</span> 个</span>
+</div>
+<div class="slider-container">
+<span class="text-xs text-gray-400">1</span>
+<input max="50" min="1" oninput="document.getElementById('bindLimitVal').innerText = this.value" type="range" value="10"/>
+<span class="text-xs text-gray-400">50</span>
+</div>
+</div>
+<div>
+<div class="flex justify-between items-center mb-2">
+<label class="text-sm font-medium text-gray-700 flex items-center gap-1">
+<iconify-icon class="text-green-500" icon="ri:database-2-line"></iconify-icon> 知识库容量 (GB)
+                            </label>
+<span class="text-sm font-bold text-[#409eff]"><span id="kbCapVal">5</span> GB</span>
+</div>
+<div class="slider-container">
+<span class="text-xs text-gray-400">1</span>
+<input max="100" min="1" oninput="document.getElementById('kbCapVal').innerText = this.value" type="range" value="5"/>
+<span class="text-xs text-gray-400">100</span>
+</div>
+</div>
+</div>
+</div>
+<div class="px-6 py-4 border-t bg-gray-50 flex justify-end gap-3 rounded-b-lg">
+<button class="el-button border-gray-300 hover:bg-white px-6" onclick="closeModal('packageConfigModal')">取消</button>
+<button class="el-button-primary px-6" onclick="showToast('配置已更新')">应用配置</button>
+</div>
+</div>
+</div>
+<!-- 弹窗：配置AI模板 -->
+<div class="modal-overlay fixed inset-0 z-50 flex items-center justify-center" id="aiTemplateModal">
+<div class="bg-white rounded-lg shadow-xl w-[600px] max-h-[90vh] overflow-y-auto">
+<div class="flex items-center justify-between px-6 py-4 border-b">
+<div class="flex items-center gap-2">
+<h3 class="font-bold text-gray-700">配置AI模板</h3>
+<span class="text-sm text-gray-400" id="aiTenantName"></span>
+</div>
+<button class="text-gray-400 hover:text-gray-600" onclick="closeModal('aiTemplateModal')">
+<iconify-icon class="text-xl" icon="ri:close-line"></iconify-icon>
+</button>
+</div>
+<div class="p-6 space-y-4">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">模板类型</label>
+<select class="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:border-[#409eff]">
+<option value="comment">社媒评论生成</option>
+<option value="scoring">客户意向打分</option>
+<option value="chat">私信智能问答</option>
+</select>
+</div>
+<div>
+<div class="flex justify-between mb-1">
+<label class="block text-sm font-medium text-gray-700">角色设置</label>
+<button class="text-xs text-[#409eff] hover:underline">查看示例</button>
+</div>
+<textarea class="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:border-[#409eff] h-24 resize-none">角色：源头工厂、实体商家、行业从业者，在小红书、抖音、视频号评论区友好互动。</textarea>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">约束条件</label>
+<textarea class="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:border-[#409eff] h-32 resize-none">1.贴合帖子内容自然回复；
+2.口语化、简短1-2句；
+3.围绕产品、货源、定制、拿货、批发、服务交流；
+4.软互动不硬广，规避平台风控；
+5.每条话术不重复；
+6.不留任何联系方式。</textarea>
+</div>
+</div>
+<div class="px-6 py-4 border-t bg-gray-50 flex justify-between gap-3 rounded-b-lg">
+<button class="el-button border-gray-300 hover:bg-white text-gray-500 bg-gray-50">恢复系统默认</button>
+<div class="flex gap-2">
+<button class="el-button border-gray-300 hover:bg-white" onclick="closeModal('aiTemplateModal')">取消</button>
+<button class="el-button-primary px-6" onclick="showToast('AI模板已保存')">保存配置</button>
+</div>
+</div>
+</div>
+</div>
+<!-- 全局提示容器 -->
+<div class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] px-4 py-2 bg-gray-800 text-white rounded text-sm shadow-lg opacity-0 transition-opacity pointer-events-none" id="toast">
+        提示文字
+    </div>
+<script>
+        const tenants = [
+            { id: 882910, name: '广州悦享科技有限公司', contact: '张晓明', phone: '13800138000', email: 'zhang@yxtech.com', package: 'ent', createTime: '2026-07-10', status: 1, concurrent: 45, aiQuota: 50000, binds: 30, kb: 50 },
+            { id: 882911, name: '上海晨风服饰有限公司', contact: '李丽娜', phone: '13912345678', email: 'li@chenfeng.cn', package: 'pro', createTime: '2026-07-12', status: 1, concurrent: 12, aiQuota: 10000, binds: 10, kb: 10 },
+            { id: 882912, name: '深圳极光贸易馆', contact: '王建国', phone: '13566778899', email: 'wang@jiguang.net', package: 'basic', createTime: '2026-07-14', status: 0, concurrent: 5, aiQuota: 1000, binds: 3, kb: 1 },
+            { id: 882913, name: '杭州丝路数字传媒', contact: '赵敏', phone: '18899887766', email: 'zhao@silu.com', package: 'pro', createTime: '2026-07-15', status: 1, concurrent: 20, aiQuota: 20000, binds: 15, kb: 20 },
+            { id: 882914, name: '北京瑞驰咨询有限公司', contact: '陈刚', phone: '13711223344', email: 'chen@瑞驰.com', package: 'ent', createTime: '2026-07-16', status: 1, concurrent: 80, aiQuota: 80000, binds: 45, kb: 80 },
+            { id: 882915, name: '成都好味食品连锁', contact: '孙悦', phone: '13655667788', email: 'sun@haowei.com', package: 'basic', createTime: '2026-07-16', status: 1, concurrent: 3, aiQuota: 500, binds: 2, kb: 0.5 },
+            { id: 882916, name: '武汉精工制造厂', contact: '周伟', phone: '13299887755', email: 'zhou@武汉精工.cn', package: 'pro', createTime: '2026-07-17', status: 1, concurrent: 15, aiQuota: 15000, binds: 12, kb: 15 },
+            { id: 882917, name: '南京飞鸟文化中心', contact: '吴悠', phone: '13011223355', email: 'wu@南京飞鸟.net', package: 'basic', createTime: '2026-07-17', status: 0, concurrent: 2, aiQuota: 800, binds: 5, kb: 2 }
+        ];
+
+        function renderTenants() {
+            const list = document.getElementById('tenantList');
+            list.innerHTML = tenants.map(t => `
+                <tr class="text-left">
+                    <td class="px-4 py-4 text-center">
+                        <input type="checkbox" class="tenant-check rounded" onchange="checkSelection()">
+                    </td>
+                    <td class="px-4 py-4">
+                        <div class="font-bold text-gray-800">${t.name}</div>
+                        <div class="text-[11px] text-gray-400">ID: ${t.id}</div>
+                    </td>
+                    <td class="px-4 py-4 text-sm">
+                        <div class="flex items-center gap-1"><iconify-icon icon="ri:user-line" class="text-gray-400"></iconify-icon> ${t.contact}</div>
+                        <div class="text-[11px] text-gray-400 mt-0.5">${t.phone}</div>
+                        <div class="text-[11px] text-gray-400 italic">${t.email}</div>
+                    </td>
+                    <td class="px-4 py-4">
+                        <span class="el-tag tag-${t.package}">${t.package === 'ent' ? '企业版' : t.package === 'pro' ? '专业版' : '基础版'}</span>
+                    </td>
+                    <td class="px-4 py-4">
+                        <div class="tooltip">
+                            <span class="text-xs border-b border-dotted border-gray-400 cursor-help text-[#409eff]">查看配额详情</span>
+                            <div class="tooltiptext">
+                                <p>任务并发：${t.concurrent} 个</p>
+                                <p>AI调用：${t.aiQuota.toLocaleString()} 次/月</p>
+                                <p>账号上限：${t.binds} 个</p>
+                                <p>知识库：${t.kb} GB</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-4 py-4 text-xs text-gray-500">${t.createTime}</td>
+                    <td class="px-4 py-4 text-center">
+                        <label class="el-switch">
+                            <input type="checkbox" class="el-switch-input" ${t.status ? 'checked' : ''} onchange="toggleStatus(${t.id})">
+                            <span class="el-switch-slider"></span>
+                        </label>
+                    </td>
+                    <td class="px-4 py-4 text-right whitespace-nowrap">
+                        <button onclick="openEditModal(${t.id})" class="el-button-text">编辑</button>
+                        <button onclick="openAIConfig(${t.id})" class="el-button-text">AI配置</button>
+                        <button onclick="openPackageConfig(${t.id})" class="el-button-text">套餐</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function toggleSelectAll(master) {
+            const checks = document.querySelectorAll('.tenant-check');
+            checks.forEach(c => c.checked = master.checked);
+            checkSelection();
+        }
+
+        function checkSelection() {
+            const checks = document.querySelectorAll('.tenant-check:checked');
+            const batchBtn = document.getElementById('batchBtn');
+            batchBtn.disabled = checks.length === 0;
+            if (checks.length > 0) {
+                batchBtn.classList.replace('text-gray-600', 'text-[#409eff]');
+            } else {
+                batchBtn.classList.replace('text-[#409eff]', 'text-gray-600');
+            }
+        }
+
+        function openModal(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function openEditModal(id) {
+            const t = tenants.find(x => x.id === id);
+            document.getElementById('editTenantTitle').innerText = t.name;
+            document.getElementById('editName').value = t.name;
+            document.getElementById('editContact').value = t.contact;
+            document.getElementById('editPhone').value = t.phone;
+            document.getElementById('editEmail').value = t.email;
+            openModal('editTenantModal');
+        }
+
+        function openPackageConfig(id) {
+            const t = tenants.find(x => x.id === id);
+            document.getElementById('configTenantName').innerText = `[${t.name}]`;
+            document.getElementById('concurrentVal').innerText = t.concurrent;
+            document.querySelector('#packageConfigModal input[min="1"][max="100"]').value = t.concurrent;
+            document.getElementById('aiQuotaVal').innerText = t.aiQuota;
+            document.querySelector('#packageConfigModal input[min="1000"]').value = t.aiQuota;
+            document.getElementById('bindLimitVal').innerText = t.binds;
+            document.querySelector('#packageConfigModal input[min="1"][max="50"]').value = t.binds;
+            document.getElementById('kbCapVal').innerText = t.kb;
+            document.querySelector('#packageConfigModal input[min="1"][max="100"]:last-of-type').value = t.kb;
+            openModal('packageConfigModal');
+        }
+
+        function openAIConfig(id) {
+            const t = tenants.find(x => x.id === id);
+            document.getElementById('aiTenantName').innerText = `[${t.name}]`;
+            openModal('aiTemplateModal');
+        }
+
+        function updateAddQuotaInfo(val) {
+            const info = {
+                basic: { concurrent: 5, ai: '1,000', binds: 5, kb: 1 },
+                pro: { concurrent: 20, ai: '10,000', binds: 20, kb: 10 },
+                ent: { concurrent: 50, ai: '50,000', binds: 50, kb: 50 }
+            };
+            const q = info[val];
+            document.getElementById('addQuotaPreview').innerHTML = `
+                <div>任务并发：${q.concurrent}个</div>
+                <div>AI调用：${q.ai}次/月</div>
+                <div>账号绑定：${q.binds}个</div>
+                <div>知识库：${q.kb}GB</div>
+            `;
+        }
+
+        function saveTenant(mode) {
+            showToast(mode === 'add' ? '租户创建成功' : '修改已保存');
+            closeModal(mode === 'add' ? 'addTenantModal' : 'editTenantModal');
+        }
+
+        function toggleStatus(id) {
+            const t = tenants.find(x => x.id === id);
+            t.status = t.status ? 0 : 1;
+            showToast(`${t.name} 已${t.status ? '启用' : '禁用'}`);
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.style.opacity = '1';
+            setTimeout(() => {
+                toast.style.opacity = '0';
+            }, 2000);
+        }
+
+        function changeRole(role) {
+            localStorage.setItem('currentRole', role);
+            location.reload();
+        }
+
+        // 模拟侧边栏权限逻辑 (简单版)
+        function updateSidebar() {
+            const role = localStorage.getItem('currentRole') || 'super_admin';
+            const hideMap = {
+                'super_admin': [],
+                'tenant_admin': ['tenant_management.html', 'proxy_ip.html'],
+                'operator': ['tenant_management.html', 'proxy_ip.html', 'ai_config.html', 'social_accounts.html', 'crawler_tasks.html']
+            };
+            const toHide = hideMap[role] || [];
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                const href = item.getAttribute('href');
+                if (toHide.some(h => href.includes(h))) {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateSidebar();
+            renderTenants();
+            
+            // 权限拦截逻辑
+            const role = localStorage.getItem('currentRole') || 'super_admin';
+            if (role !== 'super_admin') {
+                document.querySelector('main').innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full">
+                        <div class="bg-white p-12 rounded-lg shadow-sm text-center max-w-md border border-red-100">
+                            <iconify-icon icon="ri:shield-keyhole-line" class="text-6xl text-red-400 mb-6"></iconify-icon>
+                            <h2 class="text-2xl font-bold text-gray-800 mb-4">无权访问</h2>
+                            <p class="text-gray-500 mb-8 leading-relaxed">
+                                抱歉，租户管理页面仅限超级管理员角色访问。<br>
+                                您当前的角色为：<span class="font-bold text-gray-700">${role === 'tenant_admin' ? '租户管理员' : '业务员'}</span>
+                            </p>
+                            <button onclick="location.href='dashboard.html'" class="el-button-primary px-8 py-3 w-full shadow-lg shadow-blue-100">返回首页仪表盘</button>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+
+        // 处理点击外部关闭模态框
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                event.target.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

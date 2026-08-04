@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>代理IP管理 - 社媒AI自动化SaaS平台</title>
+<script src="https://modao.cc/agent-py/static/source/js/tailwindcss.js"></script>
+<script src="https://modao.cc/agent-py/static/source/js/iconify-icon.min.js"></script>
+<style>
+        body { background-color: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .sidebar-item:hover { background-color: #263445; }
+        .sidebar-item.active { color: #409eff; background-color: #263445; }
+        .el-button-primary { background-color: #409eff; color: white; }
+        .el-button-primary:hover { background-color: #66b1ff; }
+        .el-table th { background-color: #f5f7fa; color: #909399; font-weight: 600; font-size: 14px; }
+        .el-table td { border-bottom: 1px solid #ebeef5; padding: 12px 0; color: #606266; font-size: 14px; }
+        .modal-overlay { background-color: rgba(0, 0, 0, 0.5); }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+<!-- 侧边栏 -->
+<aside class="w-[240px] bg-[#304156] flex-none flex flex-col">
+<div class="h-[60px] flex items-center px-6 gap-3 border-b border-[#1f2d3d]">
+<iconify-icon class="text-2xl text-[#409eff]" icon="ri:robot-fill"></iconify-icon>
+<span class="text-white font-bold tracking-tight">SocialAI SaaS</span>
+</div>
+<nav class="flex-1 overflow-y-auto py-4">
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="dashboard.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:dashboard-3-line"></iconify-icon>
+<span class="text-sm">首页仪表盘</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="tenant_management.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:building-4-line"></iconify-icon>
+<span class="text-sm">租户管理</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="social_accounts.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:share-box-line"></iconify-icon>
+<span class="text-sm">社媒账号管理</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="crawler_tasks.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:robot-line"></iconify-icon>
+<span class="text-sm">爬虫任务管理</span>
+</a>
+<a class="sidebar-item active flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="proxy_ip.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:global-line"></iconify-icon>
+<span class="text-sm">代理IP管理</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="ai_config.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:brain-line"></iconify-icon>
+<span class="text-sm">AI配置中心</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="crm_leads.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:user-search-line"></iconify-icon>
+<span class="text-sm">CRM客户线索</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="messages.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:message-3-line"></iconify-icon>
+<span class="text-sm">消息会话管理</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="settings.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:settings-4-line"></iconify-icon>
+<span class="text-sm">系统设置</span>
+</a>
+</nav>
+</aside>
+<div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+<!-- 顶部栏 -->
+<header class="h-[60px] bg-white border-b border-[#e6e6e6] flex items-center justify-between px-6 flex-none">
+<div class="flex items-center text-gray-500">
+<iconify-icon class="text-xl cursor-pointer mr-4" icon="ri:menu-fold-line"></iconify-icon>
+<div class="flex items-center text-sm">
+<span class="text-gray-400">系统管理</span>
+<span class="mx-2">/</span>
+<span class="text-gray-700 font-medium">代理IP管理</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 border-r pr-4">
+<span class="text-xs text-gray-400">切换角色:</span>
+<select class="text-sm border border-gray-300 rounded px-2 py-1 outline-none focus:border-[#409eff]" id="roleSelect" onchange="changeRole(this.value)">
+<option value="super_admin">超级管理员</option>
+<option value="tenant_admin">租户管理员</option>
+<option value="operator">业务员子账号</option>
+</select>
+</div>
+<div class="flex items-center gap-2">
+<img class="w-8 h-8 rounded-full border" src="/agent-py/static/source/images/placeholder.svg"/>
+<div class="flex flex-col">
+<span class="text-sm font-medium text-gray-700 leading-tight">Admin</span>
+<span class="text-[10px] leading-tight font-medium px-1 rounded" id="roleLabel"></span>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-1 overflow-y-auto p-6">
+<div class="bg-white rounded p-6 shadow-sm">
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-lg font-bold text-gray-800">代理IP池</h3>
+<button class="el-button-primary px-4 py-2 rounded text-sm flex items-center gap-1" onclick="openModal('addIpModal')">
+<iconify-icon icon="ri:add-line"></iconify-icon> 导入代理IP
+                    </button>
+</div>
+<!-- 表格内容 -->
+<table class="w-full el-table">
+<thead>
+<tr class="text-left">
+<th class="px-4 py-3">服务器地址</th>
+<th class="px-4 py-3">归属地</th>
+<th class="px-4 py-3">协议类型</th>
+<th class="px-4 py-3">状态</th>
+<th class="px-4 py-3">当前负载</th>
+<th class="px-4 py-3">操作</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="px-4 py-4 font-mono text-sm text-gray-600">123.56.78.102:8080</td>
+<td class="px-4 py-4 text-sm">广东深圳</td>
+<td class="px-4 py-4 text-sm text-gray-500">HTTP/HTTPS</td>
+<td class="px-4 py-4"><span class="text-green-500 flex items-center gap-1"><span class="w-2 h-2 bg-green-500 rounded-full"></span> 运行中</span></td>
+<td class="px-4 py-4 text-sm">12/100</td>
+<td class="px-4 py-4 flex gap-3">
+<button class="text-[#409eff] hover:underline">检测</button>
+<button class="text-red-500 hover:underline">移除</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</main>
+</div>
+<!-- 弹窗：导入代理IP -->
+<div class="modal-overlay fixed inset-0 z-50 flex items-center justify-center" id="addIpModal" style="display: none;">
+<div class="bg-white rounded-lg shadow-xl w-[450px]">
+<div class="flex items-center justify-between px-6 py-4 border-b">
+<h3 class="font-bold text-gray-700">导入代理IP</h3>
+<button class="text-gray-400 hover:text-gray-600" onclick="closeModal('addIpModal')">
+<iconify-icon class="text-xl" icon="ri:close-line"></iconify-icon>
+</button>
+</div>
+<div class="p-6 space-y-4">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">IP列表 (一行一个)</label>
+<textarea class="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:border-[#409eff] h-40" placeholder="格式：IP:端口:用户名:密码"></textarea>
+<p class="text-[10px] text-gray-400 mt-1">支持 HTTP/HTTPS 协议，批量导入请用换行分隔</p>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">归属地备注</label>
+<input class="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:border-[#409eff]" placeholder="如：深圳机房" type="text"/>
+</div>
+</div>
+<div class="px-6 py-4 border-t bg-gray-50 flex justify-end gap-3 rounded-b-lg">
+<button class="px-4 py-2 border border-gray-300 rounded text-sm hover:bg-white" onclick="closeModal('addIpModal')">取消</button>
+<button class="px-4 py-2 bg-[#409eff] text-white rounded text-sm hover:bg-[#66b1ff]" onclick="closeModal('addIpModal')">执行导入并检测</button>
+</div>
+</div>
+</div>
+<script>
+        function openModal(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                event.target.style.display = 'none';
+            }
+        }
+        function updateSidebar() {
+            const role = localStorage.getItem('currentRole') || 'super_admin';
+            const sidebarItems = document.querySelectorAll('.sidebar-item');
+            
+            // 首先显示所有项，防止全部消失
+            sidebarItems.forEach(item => {
+                item.style.display = 'flex';
+            });
+            
+            // 定义不同角色需要隐藏的项 (基于文件名)
+            const hideConfig = {
+                'super_admin': [],
+                'tenant_admin': ['tenant_management.html', 'proxy_ip.html', 'settings.html'],
+                'operator': ['tenant_management.html', 'social_accounts.html', 'crawler_tasks.html', 'proxy_ip.html', 'ai_config.html', 'settings.html']
+            };
+            
+            const toHide = hideConfig[role] || [];
+            
+            sidebarItems.forEach(item => {
+                const href = item.getAttribute('href');
+                if (href) {
+                    const fileName = href.split('/').pop();
+                    if (toHide.includes(fileName)) {
+                        item.style.display = 'none';
+                    }
+                }
+            });
+        }
+        function updateRoleUI() {
+            const role = localStorage.getItem('currentRole') || 'super_admin';
+            const roleSelect = document.getElementById('roleSelect');
+            if (roleSelect) roleSelect.value = role;
+            const roleLabel = document.getElementById('roleLabel');
+            if (roleLabel) {
+                const roles = {
+                    'super_admin': { text: '超级管理员', class: 'text-blue-500 bg-blue-50' },
+                    'tenant_admin': { text: '租户管理员', class: 'text-green-500 bg-green-50' },
+                    'operator': { text: '业务员', class: 'text-orange-500 bg-orange-50' }
+                };
+                roleLabel.innerText = roles[role].text;
+                roleLabel.className = `text-[10px] px-1.5 py-0.5 rounded ${roles[role].class} leading-tight font-medium`;
+            }
+        }
+        function checkPermission() {
+            const role = localStorage.getItem('currentRole') || 'super_admin';
+            const path = 'proxy_ip.html';
+            const permissions = {
+                'super_admin': ['dashboard.html', 'tenant_management.html', 'social_accounts.html', 'crawler_tasks.html', 'proxy_ip.html', 'ai_config.html', 'crm_leads.html', 'messages.html', 'settings.html'],
+                'tenant_admin': ['dashboard.html', 'social_accounts.html', 'crawler_tasks.html', 'ai_config.html', 'crm_leads.html', 'messages.html'],
+                'operator': ['dashboard.html', 'crm_leads.html', 'messages.html']
+            };
+            if (!permissions[role].includes(path)) {
+                document.querySelector('main').innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full">
+                        <div class="bg-white p-10 rounded-lg shadow-md text-center">
+                            <iconify-icon icon="ri:lock-password-fill" class="text-6xl text-red-500 mb-4"></iconify-icon>
+                            <h2 class="text-2xl font-bold text-gray-800 mb-2">🔒 无权限访问</h2>
+                            <p class="text-gray-500 mb-6">抱歉，您当前的角色（${getRoleName(role)}）无权访问此页面。</p>
+                            <button onclick="location.href='dashboard.html'" class="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">返回首页</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        function getRoleName(role) {
+            if (role === 'super_admin') return '超级管理员';
+            if (role === 'tenant_admin') return '租户管理员';
+            if (role === 'operator') return '业务员';
+            return role;
+        }
+        function changeRole(role) {
+            localStorage.setItem('currentRole', role);
+            location.reload();
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            updateSidebar();
+            updateRoleUI();
+            checkPermission();
+        });
+    </script>
+</body>
+</html>

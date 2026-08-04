@@ -1,0 +1,322 @@
+{
+  "info": {
+    "name": "SocialAI SaaS API",
+    "description": "SocialAI 社媒采集运营后台接口集合\n\n统一响应：{ code, msg, data }\n认证：Authorization: Bearer {token}",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8000/api" },
+    { "key": "token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. 鉴权",
+      "item": [
+        {
+          "name": "登录",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.code === 200 && json.data.token) {",
+                  "  pm.collectionVariables.set('token', json.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "当前用户",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/auth/me"
+          }
+        },
+        {
+          "name": "切换角色",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"tenant_admin\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/switch-role"
+          }
+        },
+        {
+          "name": "退出登录",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/auth/logout"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. 仪表盘",
+      "item": [
+        {
+          "name": "总览",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/dashboard/overview"
+          }
+        },
+        {
+          "name": "趋势图",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/dashboard/trend"
+          }
+        },
+        {
+          "name": "意向饼图",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/dashboard/intent-pie"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. 租户管理",
+      "item": [
+        {
+          "name": "统计",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/tenants/stats"
+          }
+        },
+        {
+          "name": "列表",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/tenants?page=1&size=10&keyword=&status=&package=",
+              "host": ["{{baseUrl}}"],
+              "path": ["tenants"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "size", "value": "10" },
+                { "key": "keyword", "value": "" },
+                { "key": "status", "value": "" },
+                { "key": "package", "value": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "新增租户",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"测试租户有限公司\",\n  \"contact\": \"王五\",\n  \"phone\": \"13800001111\",\n  \"email\": \"test@demo.com\",\n  \"package\": \"pro\",\n  \"remark\": \"演示\"\n}"
+            },
+            "url": "{{baseUrl}}/tenants"
+          }
+        },
+        {
+          "name": "套餐配置",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"package\": \"ent\",\n  \"concurrent\": 50,\n  \"aiQuota\": 50000,\n  \"binds\": 30,\n  \"kb\": 50\n}"
+            },
+            "url": "{{baseUrl}}/tenants/1/package"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. 资源管理",
+      "item": [
+        {
+          "name": "社媒账号列表",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/social-accounts?page=1&size=10"
+          }
+        },
+        {
+          "name": "绑定社媒账号",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"platform\": \"抖音\",\n  \"token\": \"cookie_or_token_here\",\n  \"ip\": \"auto\",\n  \"tenantId\": 1\n}"
+            },
+            "url": "{{baseUrl}}/social-accounts"
+          }
+        },
+        {
+          "name": "爬虫任务列表",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/crawler-tasks?page=1&size=10"
+          }
+        },
+        {
+          "name": "新建爬虫任务",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"竞品监控\",\n  \"platform\": \"小红书\",\n  \"taskType\": \"keyword\",\n  \"keywords\": \"护肤品, 祛痘\",\n  \"frequency\": \"每2小时\",\n  \"dailyLimit\": 500,\n  \"tenantId\": 1\n}"
+            },
+            "url": "{{baseUrl}}/crawler-tasks"
+          }
+        },
+        {
+          "name": "启停爬虫任务",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/crawler-tasks/1/toggle"
+          }
+        },
+        {
+          "name": "代理IP列表",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/proxy-ips?page=1&size=10"
+          }
+        },
+        {
+          "name": "导入代理IP",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"list\": \"123.56.78.200:8080\\n47.100.23.99:3128\",\n  \"location\": \"深圳机房\"\n}"
+            },
+            "url": "{{baseUrl}}/proxy-ips/import"
+          }
+        },
+        {
+          "name": "检测代理",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/proxy-ips/1/check"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. 系统管理",
+      "item": [
+        {
+          "name": "AI模板列表",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/ai-config/templates?tenantId=1"
+          }
+        },
+        {
+          "name": "CRM线索列表",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/crm-leads?page=1&size=10&intent="
+          }
+        },
+        {
+          "name": "线索打标",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"level\": \"high\",\n  \"status\": \"已接洽\",\n  \"tags\": [\"代理意向\"],\n  \"remark\": \"重点跟进\"\n}"
+            },
+            "url": "{{baseUrl}}/crm-leads/1/tag"
+          }
+        },
+        {
+          "name": "会话列表",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/messages/sessions"
+          }
+        },
+        {
+          "name": "发送消息",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"您好，已为您登记意向城市。\"\n}"
+            },
+            "url": "{{baseUrl}}/messages/sessions/1/send"
+          }
+        },
+        {
+          "name": "系统基本设置",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/settings/basic"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>登录 - 社媒AI自动化SaaS平台</title>
+<script src="https://modao.cc/agent-py/static/source/js/tailwindcss.js"></script>
+<script src="https://modao.cc/agent-py/static/source/js/iconify-icon.min.js"></script>
+<style>
+        body { background-color: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        .el-input { border: 1px solid #dcdfe6; transition: border-color .2s cubic-bezier(.645,.045,.355,1); }
+        .el-input:focus { border-color: #409eff; outline: none; }
+        .el-button-primary { background-color: #409eff; transition: .1s; }
+        .el-button-primary:hover { background-color: #66b1ff; }
+        .role-card:hover { border-color: #409eff; background-color: #f5f7fa; transform: translateY(-2px); }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
+<div class="flex w-full max-w-[900px] h-[550px] bg-white rounded-xl shadow-2xl overflow-hidden mb-8">
+<!-- 左侧展示区 -->
+<div class="w-1/2 bg-[#304156] p-12 flex flex-col justify-between text-white relative">
+<div class="z-10">
+<div class="flex items-center gap-3 mb-8">
+<div class="w-10 h-10 bg-[#409eff] rounded-lg flex items-center justify-center">
+<iconify-icon class="text-2xl text-white" icon="ri:robot-fill"></iconify-icon>
+</div>
+<span class="text-xl font-bold tracking-wider">SocialAI SaaS</span>
+</div>
+<h1 class="text-3xl font-bold mb-4">全渠道社媒<br/>AI自动化管理平台</h1>
+<p class="text-gray-400 text-sm leading-relaxed">集成内容采集、AI生成、自动回复与CRM转化，为企业提供一站式智能营销解决方案。</p>
+</div>
+<div class="z-10 text-xs text-gray-500">
+                © 2026 SocialAI Technology Co., Ltd.
+            </div>
+<!-- 装饰背景 -->
+<div class="absolute top-[-10%] right-[-10%] w-64 h-64 bg-[#409eff] opacity-10 rounded-full blur-3xl"></div>
+<div class="absolute bottom-[5%] left-[5%] w-32 h-32 bg-[#409eff] opacity-5 rounded-full blur-2xl"></div>
+</div>
+<!-- 右侧登录区 -->
+<div class="w-1/2 p-12 flex flex-col justify-center">
+<div class="mb-10 text-center">
+<h2 class="text-2xl font-bold text-gray-800">欢迎登录</h2>
+<p class="text-gray-400 text-sm mt-2">社媒AI自动化获客SaaS系统</p>
+</div>
+<form class="space-y-6" onsubmit="event.preventDefault(); login();">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">账号</label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+<iconify-icon icon="ri:user-line"></iconify-icon>
+</span>
+<input class="el-input block w-full pl-10 pr-3 py-2.5 text-sm rounded-md" id="username" placeholder="请输入管理员账号" type="text" value="admin"/>
+</div>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">密码</label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+<iconify-icon icon="ri:lock-line"></iconify-icon>
+</span>
+<input class="el-input block w-full pl-10 pr-3 py-2.5 text-sm rounded-md" placeholder="请输入登录密码" type="password" value="password123"/>
+</div>
+</div>
+<button class="el-button-primary w-full py-3 px-4 rounded-md text-white font-medium shadow-lg shadow-blue-200" type="submit">
+                    立即登录
+                </button>
+</form>
+<div class="mt-8 text-center">
+<p class="text-xs text-gray-400">其他登录方式</p>
+<div class="flex justify-center gap-4 mt-3">
+<button class="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50">
+<iconify-icon icon="ri:wechat-fill"></iconify-icon>
+</button>
+<button class="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50">
+<iconify-icon icon="ri:dingding-fill"></iconify-icon>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- 角色切换演示区域 -->
+<div class="w-full max-w-[900px]">
+<div class="flex items-center gap-4 mb-4">
+<div class="h-px flex-1 bg-gray-300"></div>
+<span class="text-sm text-gray-500 font-medium">切换角色演示 (快捷登录)</span>
+<div class="h-px flex-1 bg-gray-300"></div>
+</div>
+<div class="grid grid-cols-3 gap-6">
+<div class="role-card bg-white p-5 rounded-lg border border-gray-200 shadow-sm cursor-pointer transition-all" onclick="quickLogin('super_admin')">
+<div class="flex items-center gap-3 mb-3">
+<div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+<iconify-icon class="text-xl" icon="ri:admin-fill"></iconify-icon>
+</div>
+<h3 class="font-bold text-gray-800">超级管理员</h3>
+</div>
+<p class="text-xs text-gray-500 leading-relaxed">拥有平台全量权限，管理租户、套餐、IP池及系统全局配置。</p>
+</div>
+<div class="role-card bg-white p-5 rounded-lg border border-gray-200 shadow-sm cursor-pointer transition-all" onclick="quickLogin('tenant_admin')">
+<div class="flex items-center gap-3 mb-3">
+<div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600">
+<iconify-icon class="text-xl" icon="ri:user-settings-fill"></iconify-icon>
+</div>
+<h3 class="font-bold text-gray-800">租户管理员</h3>
+</div>
+<p class="text-xs text-gray-500 leading-relaxed">管理企业社媒账号、爬虫任务、AI模板及私有知识库。</p>
+</div>
+<div class="role-card bg-white p-5 rounded-lg border border-gray-200 shadow-sm cursor-pointer transition-all" onclick="quickLogin('operator')">
+<div class="flex items-center gap-3 mb-3">
+<div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-600">
+<iconify-icon class="text-xl" icon="ri:customer-service-2-fill"></iconify-icon>
+</div>
+<h3 class="font-bold text-gray-800">业务员子账号</h3>
+</div>
+<p class="text-xs text-gray-500 leading-relaxed">专注于CRM线索跟进、消息会话处理，无系统配置权限。</p>
+</div>
+</div>
+</div>
+<script>
+        function quickLogin(role) {
+            localStorage.setItem('currentRole', role);
+            location.href = 'dashboard.html';
+        }
+
+        function login() {
+            // 默认登录为超级管理员，如果账号是admin的话
+            const username = document.getElementById('username').value;
+            if (username === 'admin') {
+                localStorage.setItem('currentRole', 'super_admin');
+            } else {
+                localStorage.setItem('currentRole', 'tenant_admin');
+            }
+            location.href = 'dashboard.html';
+        }
+    </script>
+</body>
+</html>

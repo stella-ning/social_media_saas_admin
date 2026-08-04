@@ -1,0 +1,43 @@
+/* SocialAI SaaS 全局样式 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: #f0f2f5;
+  color: #303133;
+}
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: #c0c4cc;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 页面内容通用间距 */
+.page-container {
+  padding: 0;
+}
+
+.page-card {
+  margin-bottom: 16px;
+}
+
+/* 表格操作按钮间距 */
+.table-actions .el-button + .el-button {
+  margin-left: 4px;
+}

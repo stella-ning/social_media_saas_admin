@@ -1,0 +1,16 @@
+#!/usr/bin/env php
+<?php
+
+define('LARAVEL_START', microtime(true));
+
+if (!file_exists(__DIR__.'/vendor/autoload.php')) {
+    fwrite(STDERR, "请先执行 composer install\n");
+    exit(1);
+}
+
+require __DIR__.'/vendor/autoload.php';
+
+$status = (require_once __DIR__.'/bootstrap/app.php')
+    ->handleCommand(new Symfony\Component\Console\Input\ArgvInput);
+
+exit($status);

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>消息会话管理 - 社媒AI自动化SaaS平台</title>
+<script src="https://modao.cc/agent-py/static/source/js/tailwindcss.js"></script>
+<script src="https://modao.cc/agent-py/static/source/js/iconify-icon.min.js"></script>
+<style>
+        body { background-color: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .sidebar-item:hover { background-color: #263445; }
+        .sidebar-item.active { color: #409eff; background-color: #263445; }
+        .chat-item:hover { background-color: #f5f7fa; }
+        .chat-item.active { background-color: #ecf5ff; border-right: 3px solid #409eff; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+<!-- 侧边栏 -->
+<aside class="w-[240px] bg-[#304156] flex-none flex flex-col">
+<div class="h-[60px] flex items-center px-6 gap-3 border-b border-[#1f2d3d]">
+<iconify-icon class="text-2xl text-[#409eff]" icon="ri:robot-fill"></iconify-icon>
+<span class="text-white font-bold tracking-tight">SocialAI SaaS</span>
+</div>
+<nav class="flex-1 overflow-y-auto py-4">
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="dashboard.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:dashboard-3-line"></iconify-icon>
+<span class="text-sm">首页仪表盘</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="tenant_management.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:building-4-line"></iconify-icon>
+<span class="text-sm">租户管理</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="social_accounts.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:share-box-line"></iconify-icon>
+<span class="text-sm">社媒账号管理</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="crawler_tasks.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:robot-line"></iconify-icon>
+<span class="text-sm">爬虫任务管理</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="proxy_ip.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:global-line"></iconify-icon>
+<span class="text-sm">代理IP管理</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="ai_config.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:brain-line"></iconify-icon>
+<span class="text-sm">AI配置中心</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="crm_leads.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:user-search-line"></iconify-icon>
+<span class="text-sm">CRM客户线索</span>
+</a>
+<a class="sidebar-item active flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="messages.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:message-3-line"></iconify-icon>
+<span class="text-sm">消息会话管理</span>
+</a>
+<a class="sidebar-item flex items-center px-6 py-4 text-[#bfcbd9] transition-colors" href="settings.html">
+<iconify-icon class="mr-3 text-lg" icon="ri:settings-4-line"></iconify-icon>
+<span class="text-sm">系统设置</span>
+</a>
+</nav>
+</aside>
+<div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+<!-- 顶部栏 -->
+<header class="h-[60px] bg-white border-b border-[#e6e6e6] flex items-center justify-between px-6 flex-none">
+<div class="flex items-center text-gray-500">
+<iconify-icon class="text-xl cursor-pointer mr-4" icon="ri:menu-fold-line"></iconify-icon>
+<div class="flex items-center text-sm">
+<span class="text-gray-400">客户管理</span>
+<span class="mx-2">/</span>
+<span class="text-gray-700 font-medium">消息会话管理</span>
+<span class="ml-4 text-blue-500 font-normal" id="roleContext"></span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 border-r pr-4">
+<span class="text-xs text-gray-400">切换角色:</span>
+<select class="text-sm border border-gray-300 rounded px-2 py-1 outline-none focus:border-[#409eff]" id="roleSelect" onchange="changeRole(this.value)">
+<option value="super_admin">超级管理员</option>
+<option value="tenant_admin">租户管理员</option>
+<option value="operator">业务员子账号</option>
+</select>
+</div>
+<div class="flex items-center gap-2">
+<img class="w-8 h-8 rounded-full border" src="/agent-py/static/source/images/placeholder.svg"/>
+<div class="flex flex-col">
+<span class="text-sm font-medium text-gray-700 leading-tight">Admin</span>
+<span class="text-[10px] leading-tight font-medium px-1 rounded" id="roleLabel"></span>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-1 flex overflow-hidden">
+<!-- 会话列表 -->
+<div class="w-80 bg-white border-r flex flex-col">
+<div class="p-4 border-b">
+<input class="w-full border rounded px-3 py-2 text-sm outline-none focus:border-[#409eff]" placeholder="搜索会话..." type="text"/>
+</div>
+<div class="flex-1 overflow-y-auto" id="chatList">
+<div class="chat-item active p-4 flex gap-3 cursor-pointer border-b">
+<img class="w-10 h-10 rounded-full border" src="/agent-py/static/source/images/placeholder.svg"/>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between mb-1">
+<span class="text-sm font-medium text-gray-800 truncate">爱生活的Lily</span>
+<span class="text-[10px] text-gray-400">10:45</span>
+</div>
+<div class="text-xs text-gray-500 truncate">你好，请问这款护肤品怎么代理？</div>
+</div>
+</div>
+<div class="chat-item p-4 flex gap-3 cursor-pointer border-b" id="extraChat">
+<img class="w-10 h-10 rounded-full border" src="/agent-py/static/source/images/placeholder.svg"/>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between mb-1">
+<span class="text-sm font-medium text-gray-800 truncate">科技发烧友</span>
+<span class="text-[10px] text-gray-400">昨天</span>
+</div>
+<div class="text-xs text-gray-500 truncate">求批发价，私我</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 聊天窗口 -->
+<div class="flex-1 flex flex-col bg-gray-50">
+<div class="h-[60px] bg-white border-b px-6 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="font-medium">爱生活的Lily</span>
+<span class="px-2 py-0.5 bg-green-50 text-green-600 text-[10px] rounded">小红书用户</span>
+<span class="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] rounded" id="tenantTag">所属租户：广州悦享科技</span>
+</div>
+<div class="flex gap-4" id="chatActions">
+<div class="flex items-center gap-2">
+<span class="text-xs text-gray-500">AI自动回复</span>
+<div class="w-10 h-5 bg-green-500 rounded-full relative cursor-pointer">
+<div class="absolute right-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow"></div>
+</div>
+</div>
+<button class="text-sm border border-[#409eff] text-[#409eff] px-3 py-1 rounded hover:bg-blue-50">转人工接管</button>
+</div>
+</div>
+<!-- 聊天记录区 -->
+<div class="flex-1 overflow-y-auto p-6 space-y-6">
+<div class="flex justify-center"><span class="text-[10px] text-gray-400 bg-gray-200 px-2 py-0.5 rounded">2026-07-17 10:30</span></div>
+<div class="flex gap-3">
+<img class="w-8 h-8 rounded-full border flex-none" src="/agent-py/static/source/images/placeholder.svg"/>
+<div class="bg-white p-3 rounded-lg rounded-tl-none shadow-sm text-sm max-w-[70%] text-gray-700">
+                            你好，请问这款护肤品怎么代理？需要什么条件吗？
+                        </div>
+</div>
+<div class="flex gap-3 flex-row-reverse">
+<div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs flex-none">AI</div>
+<div class="bg-blue-500 p-3 rounded-lg rounded-tr-none shadow-sm text-sm max-w-[70%] text-white">
+                            您好！我是您的智能助理。我们品牌目前的代理政策非常友好，包含技术指导和货源支持。为了给您提供更精确的信息，能先了解下您的意向城市吗？
+                        </div>
+</div>
+</div>
+<!-- 输入区 -->
+<div class="bg-white border-t p-4">
+<div class="flex gap-4 mb-3 text-gray-400">
+<iconify-icon class="text-xl cursor-pointer hover:text-gray-600" icon="ri:emotion-line"></iconify-icon>
+<iconify-icon class="text-xl cursor-pointer hover:text-gray-600" icon="ri:image-line"></iconify-icon>
+<iconify-icon class="text-xl cursor-pointer hover:text-gray-600" icon="ri:folder-line"></iconify-icon>
+</div>
+<textarea class="w-full h-24 p-2 outline-none resize-none text-sm" placeholder="按 Ctrl + Enter 发送消息..."></textarea>
+<div class="flex justify-end mt-2">
+<button class="bg-[#409eff] text-white px-6 py-1.5 rounded text-sm hover:bg-blue-600">发送</button>
+</div>
+</div>
+</div>
+</main>
+</div>
+<script>
+        function updateSidebar() {
+            const role = localStorage.getItem('currentRole') || 'super_admin';
+            const sidebarItems = document.querySelectorAll('.sidebar-item');
+            
+            // 首先显示所有项，防止全部消失
+            sidebarItems.forEach(item => {
+                item.style.display = 'flex';
+            });
+            
+            // 定义不同角色需要隐藏的项 (基于文件名)
+            const hideConfig = {
+                'super_admin': [],
+                'tenant_admin': ['tenant_management.html', 'proxy_ip.html', 'settings.html'],
+                'operator': ['tenant_management.html', 'social_accounts.html', 'crawler_tasks.html', 'proxy_ip.html', 'ai_config.html', 'settings.html']
+            };
+            
+            const toHide = hideConfig[role] || [];
+            
+            sidebarItems.forEach(item => {
+                const href = item.getAttribute('href');
+                if (href) {
+                    const fileName = href.split('/').pop();
+                    if (toHide.includes(fileName)) {
+                        item.style.display = 'none';
+                    }
+                }
+            });
+        }
+        function updateRoleUI() {
+            const role = localStorage.getItem('currentRole') || 'super_admin';
+            const roleSelect = document.getElementById('roleSelect');
+            if (roleSelect) roleSelect.value = role;
+            const roleLabel = document.getElementById('roleLabel');
+            if (roleLabel) {
+                const roles = {
+                    'super_admin': { text: '超级管理员', class: 'text-blue-500 bg-blue-50' },
+                    'tenant_admin': { text: '租户管理员', class: 'text-green-500 bg-green-50' },
+                    'operator': { text: '业务员', class: 'text-orange-500 bg-orange-50' }
+                };
+                roleLabel.innerText = roles[role].text;
+                roleLabel.className = `text-[10px] px-1.5 py-0.5 rounded ${roles[role].class} leading-tight font-medium`;
+            }
+        }
+        function updatePageContent() {
+            const role = localStorage.getItem('currentRole') || 'super_admin';
+            const roleContext = document.getElementById('roleContext');
+            const extraChat = document.getElementById('extraChat');
+            const tenantTag = document.getElementById('tenantTag');
+            const chatActions = document.getElementById('chatActions');
+
+            if (role === 'tenant_admin') {
+                roleContext.innerText = '(当前租户：广州悦享科技有限公司)';
+                extraChat.style.display = 'none';
+                tenantTag.style.display = 'none';
+            } else if (role === 'operator') {
+                roleContext.innerText = '(当前查看：个人跟进会话)';
+                extraChat.style.display = 'none';
+                tenantTag.style.display = 'none';
+                chatActions.innerHTML = '<span class="text-xs text-gray-400">只读模式 (AI自动回复/人工接管权限受限)</span>';
+            }
+        }
+        function changeRole(role) {
+            localStorage.setItem('currentRole', role);
+            location.reload();
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            updateSidebar();
+            updateRoleUI();
+            updatePageContent();
+        });
+    </script>
+</body>
+</html>
