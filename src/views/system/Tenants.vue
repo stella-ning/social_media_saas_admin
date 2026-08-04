@@ -87,6 +87,12 @@
             </el-tag>
           </template>
         </el-table-column>
+        <el-table-column label="当前AI参数模板" min-width="160" show-overflow-tooltip>
+          <template #default="{ row }">
+            <span v-if="row.currentAiParamTemplateName">{{ row.currentAiParamTemplateName }}</span>
+            <span v-else class="tenant-sub">继承平台全局</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="createTime" label="创建时间" width="120" align="center" />
         <el-table-column label="状态" width="100" align="center">
           <template #default="{ row }">
@@ -175,36 +181,13 @@
       </template>
     </el-dialog>
 
-    <!-- ========== AI配置弹窗 ========== -->
-    <el-dialog v-model="aiVisible" title="配置AI模板" width="600px" destroy-on-close>
-      <el-form label-width="90px">
-        <el-form-item label="模板类型">
-          <el-select v-model="aiForm.type" style="width: 100%">
-            <el-option label="社媒评论生成" value="comment" />
-            <el-option label="客户意向打分" value="scoring" />
-            <el-option label="私信智能问答" value="chat" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="角色设置">
-          <el-input
-            v-model="aiForm.role"
-            type="textarea"
-            :rows="3"
-          />
-        </el-form-item>
-        <el-form-item label="约束条件">
-          <el-input
-            v-model="aiForm.rules"
-            type="textarea"
-            :rows="5"
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="aiVisible = false">取消</el-button>
-        <el-button type="primary" :loading="aiSaving" @click="saveAi">保存配置</el-button>
-      </template>
-    </el-dialog>
+    <!-- ========== 租户 AI 配置弹窗（按套餐筛选模板） ========== -->
+    <TenantAiConfigDialog
+      v-model="aiDialogVisible"
+      :tenant-id="aiDialogTenantId"
+      :tenant-name="aiDialogTenantName"
+      @saved="onAiConfigSaved"
+    />
 
     <!-- ========== 套餐配置弹窗 ========== -->
     <el-dialog v-model="pkgVisible" :title="`套餐配置 [${pkgTarget?.name || ''}]`" width="520px" destroy-on-close>
@@ -247,8 +230,9 @@
 import { ref, reactive, onMounted } from 'vue'
 import { Search, Download, Plus, ArrowDown } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { tenantApi, aiConfigApi } from '@/api'
+import { tenantApi } from '@/api'
 import { useListQuery } from '@/composables/useListQuery'
+import TenantAiConfigDialog from '@/components/TenantAiConfigDialog.vue'
 
 /** 顶部统计卡片配置 */
 const STAT_META = [
@@ -278,7 +262,6 @@ const selectedRows = ref([])
 const saving = ref(false)
 const batchLoading = ref(false)
 const exportLoading = ref(false)
-const aiSaving = ref(false)
 const pkgSaving = ref(false)
 
 /** 加载顶部统计数据 */
@@ -450,43 +433,20 @@ const saveTenant = async () => {
   }
 }
 
-/* ----- AI配置 ----- */
-const aiVisible = ref(false)
-const aiTarget = ref(null)
-const aiForm = reactive({
-  type: 'comment',
-  role: '角色：源头工厂、实体商家、行业从业者，在小红书、抖音、视频号评论区友好互动。',
-  rules: '1.贴合帖子内容自然回复；\n2.口语化、简短1-2句；\n3.围绕产品、货源、定制交流；\n4.软互动不硬广；\n5.每条话术不重复；\n6.不留任何联系方式。'
-})
-
-const AI_TYPE_NAMES = {
-  comment: '社媒评论生成',
-  scoring: '客户意向打分',
-  chat: '私信智能问答'
-}
+/* ----- AI配置弹窗：按套餐筛选并保存当前启用模板 ----- */
+const aiDialogVisible = ref(false)
+const aiDialogTenantId = ref(null)
+const aiDialogTenantName = ref('')
 
 const openAiDialog = (row) => {
-  aiTarget.value = row
-  aiVisible.value = true
+  aiDialogTenantId.value = row.id
+  aiDialogTenantName.value = row.name
+  aiDialogVisible.value = true
 }
 
-const saveAi = async () => {
-  aiSaving.value = true
-  try {
-    await aiConfigApi.saveTemplate({
-      tenantId: aiTarget.value?.id,
-      category: aiForm.type,
-      name: AI_TYPE_NAMES[aiForm.type] || aiForm.type,
-      role: aiForm.role,
-      rules: aiForm.rules
-    })
-    ElMessage.success('AI模板已保存')
-    aiVisible.value = false
-  } catch {
-    // 错误已在拦截器提示
-  } finally {
-    aiSaving.value = false
-  }
+const onAiConfigSaved = async () => {
+  await fetchList()
+  await fetchStats()
 }
 
 /* ----- 套餐配置 ----- */

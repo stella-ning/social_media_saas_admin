@@ -90,18 +90,72 @@ class DatabaseSeeder extends Seeder
             'status' => 1,
         ]);
 
-        SocialAccount::create([
-            'name' => '穿搭博主小美', 'uid' => '1293812',
-            'avatar' => 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png',
-            'platform' => '小红书', 'bind_ip' => '123.56.xx.102',
-            'tenant_id' => $yx->id, 'status' => 'online',
+        // 代理 IP 先创建并分配给租户（租户隔离）
+        $p1 = ProxyIp::create([
+            'address' => '123.56.78.102:8080',
+            'location' => '广东深圳',
+            'protocol' => 'HTTP/HTTPS',
+            'status' => 'idle',
+            'load' => 0,
+            'capacity' => 100,
+            'latency_ms' => 35,
+            'tenant_id' => $yx->id,
         ]);
-        SocialAccount::create([
-            'name' => '晨风服饰官方', 'uid' => '8829102',
-            'avatar' => 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png',
-            'platform' => '抖音', 'bind_ip' => '47.100.xx.54',
-            'tenant_id' => $cf->id, 'status' => 'offline',
+        $p2 = ProxyIp::create([
+            'address' => '47.100.23.45:3128',
+            'location' => '上海浦东',
+            'protocol' => 'HTTP/HTTPS',
+            'status' => 'idle',
+            'load' => 0,
+            'capacity' => 100,
+            'tenant_id' => $cf->id,
         ]);
+        $p3 = ProxyIp::create([
+            'address' => '118.31.10.20:8888',
+            'location' => '浙江杭州',
+            'protocol' => 'HTTP/HTTPS',
+            'status' => 'idle',
+            'load' => 0,
+            'capacity' => 100,
+            'tenant_id' => $yx->id,
+        ]);
+
+        \App\Models\TenantProxy::insert([
+            ['tenant_id' => $yx->id, 'proxy_ip_id' => $p1->id, 'created_at' => now(), 'updated_at' => now()],
+            ['tenant_id' => $cf->id, 'proxy_ip_id' => $p2->id, 'created_at' => now(), 'updated_at' => now()],
+            ['tenant_id' => $yx->id, 'proxy_ip_id' => $p3->id, 'created_at' => now(), 'updated_at' => now()],
+        ]);
+
+        // 演示社媒账号（密码 AES 加密；真实 Cookie 需走自动登录）
+        $acc1 = SocialAccount::create([
+            'tenant_id' => $yx->id,
+            'platform' => 1,
+            'account_name' => '13800001111',
+            'encrypt_pwd' => \App\Support\AesCrypto::encrypt('demo_password'),
+            'bind_proxy_id' => $p1->id,
+            'browser_user_agent' => \App\Support\BrowserFingerprint::generate('yx|1|13800001111')['user_agent'],
+            'browser_viewport' => '1920x1080',
+            'account_status' => 1,
+            'display_name' => '穿搭博主小美',
+            'avatar' => 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png',
+            'last_refresh_cookie' => now(),
+        ]);
+        $p1->update(['status' => 'running', 'load' => 1]);
+
+        SocialAccount::create([
+            'tenant_id' => $cf->id,
+            'platform' => 2,
+            'account_name' => '13900002222',
+            'encrypt_pwd' => \App\Support\AesCrypto::encrypt('demo_password'),
+            'bind_proxy_id' => $p2->id,
+            'browser_user_agent' => \App\Support\BrowserFingerprint::generate('cf|2|13900002222')['user_agent'],
+            'browser_viewport' => '1920x1080',
+            'account_status' => 0,
+            'display_name' => '晨风服饰官方',
+            'avatar' => 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png',
+            'risk_tip' => '演示：离线账号',
+        ]);
+        $p2->update(['status' => 'running', 'load' => 1]);
 
         $task = CrawlerTask::create([
             'name' => '全网美妆关键词监控',
@@ -110,6 +164,7 @@ class DatabaseSeeder extends Seeder
             'keywords' => '护肤品, 祛痘',
             'target' => '关键词：护肤品, 祛痘',
             'tenant_id' => $yx->id,
+            'social_account_id' => $acc1->id,
             'frequency' => '每2小时',
             'status' => 'running',
             'today_count' => 428,
@@ -132,24 +187,6 @@ class DatabaseSeeder extends Seeder
             'type' => 'success',
             'content' => '本轮采集完成，新增线索 48 条',
             'logged_at' => now()->subHours(2),
-        ]);
-
-        ProxyIp::create([
-            'address' => '123.56.78.102:8080',
-            'location' => '广东深圳',
-            'protocol' => 'HTTP/HTTPS',
-            'status' => 'running',
-            'load' => 12,
-            'capacity' => 100,
-            'latency_ms' => 35,
-        ]);
-        ProxyIp::create([
-            'address' => '47.100.23.45:3128',
-            'location' => '上海浦东',
-            'protocol' => 'HTTP/HTTPS',
-            'status' => 'running',
-            'load' => 35,
-            'capacity' => 100,
         ]);
 
         AiPromptTemplate::create([

@@ -63,6 +63,16 @@ class ProxyIpService
     public function bindTenant(ProxyIp $ip, ?int $tenantId): ProxyIp
     {
         $ip->update(['tenant_id' => $tenantId]);
+
+        // 同步 saas_tenant_proxy 关联（租户隔离）
+        \App\Models\TenantProxy::query()->where('proxy_ip_id', $ip->id)->delete();
+        if ($tenantId) {
+            \App\Models\TenantProxy::query()->firstOrCreate([
+                'tenant_id' => $tenantId,
+                'proxy_ip_id' => $ip->id,
+            ]);
+        }
+
         return $ip->fresh('tenant');
     }
 

@@ -7,11 +7,13 @@
  */
 
 use App\Http\Controllers\Api\AiConfigController;
+use App\Http\Controllers\Api\AiParamTemplateController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CrawlerTaskController;
 use App\Http\Controllers\Api\CrmLeadController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\MessageController;
+use App\Http\Controllers\Api\PackageSettingController;
 use App\Http\Controllers\Api\ProxyIpController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\SocialAccountController;
@@ -48,14 +50,30 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('tenants/{tenant}/package', [TenantController::class, 'package']);
         Route::put('tenants/{tenant}/status', [TenantController::class, 'status']);
         Route::apiResource('tenants', TenantController::class);
+
+        // 套餐权限管理（仅超管）
+        Route::get('package-setting/list', [PackageSettingController::class, 'list']);
+        Route::post('package-setting/save', [PackageSettingController::class, 'save']);
     });
 
-    // 社媒账号
-    Route::middleware('role.permission:social-accounts')->prefix('social-accounts')->group(function () {
-        Route::get('/', [SocialAccountController::class, 'index']);
-        Route::post('/', [SocialAccountController::class, 'store']);
-        Route::post('refresh', [SocialAccountController::class, 'refresh']);
-        Route::delete('{socialAccount}', [SocialAccountController::class, 'destroy']);
+    // 社媒账号（兼容新旧路径）
+    Route::middleware('role.permission:social-accounts')->group(function () {
+        // 需求接口：空闲代理
+        Route::get('tenant/free-proxy-ip/{tenantId}', [SocialAccountController::class, 'freeProxyIps']);
+
+        // 需求接口：绑定 / 会话检测
+        Route::post('social-account/store', [SocialAccountController::class, 'store']);
+        Route::get('social-account/check-login/{accountId}', [SocialAccountController::class, 'checkLogin']);
+
+        // 原有 REST 风格路径（前端沿用）
+        Route::prefix('social-accounts')->group(function () {
+            Route::get('/', [SocialAccountController::class, 'index']);
+            Route::post('/', [SocialAccountController::class, 'store']);
+            Route::post('refresh', [SocialAccountController::class, 'refresh']);
+            Route::post('refresh-status', [SocialAccountController::class, 'refresh']);
+            Route::get('{socialAccount}/logs', [SocialAccountController::class, 'logs']);
+            Route::delete('{socialAccount}', [SocialAccountController::class, 'destroy']);
+        });
     });
 
     // 爬虫任务
@@ -73,18 +91,37 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('import', [ProxyIpController::class, 'import']);
         Route::post('{proxyIp}/check', [ProxyIpController::class, 'check']);
         Route::put('{proxyIp}/bind', [ProxyIpController::class, 'bind']);
+        Route::put('{proxyIp}/bind-tenant', [ProxyIpController::class, 'bind']);
         Route::delete('{proxyIp}', [ProxyIpController::class, 'destroy']);
     });
 
-    // AI 配置
-    Route::middleware('role.permission:ai-config')->prefix('ai-config')->group(function () {
-        Route::get('templates', [AiConfigController::class, 'templates']);
-        Route::post('templates', [AiConfigController::class, 'saveTemplate']);
-        Route::delete('templates/{template}', [AiConfigController::class, 'deleteTemplate']);
-        Route::post('test', [AiConfigController::class, 'test']);
-        Route::get('docs', [AiConfigController::class, 'docs']);
-        Route::post('docs', [AiConfigController::class, 'uploadDoc']);
-        Route::delete('docs/{doc}', [AiConfigController::class, 'deleteDoc']);
+    // AI 配置（Prompt / 知识库 / AI参数模板 / 账号绑定）
+    Route::middleware('role.permission:ai-config')->group(function () {
+        Route::prefix('ai-config')->group(function () {
+            Route::get('templates', [AiConfigController::class, 'templates']);
+            Route::post('templates', [AiConfigController::class, 'saveTemplate']);
+            Route::delete('templates/{template}', [AiConfigController::class, 'deleteTemplate']);
+            Route::post('test', [AiConfigController::class, 'test']);
+            Route::get('docs', [AiConfigController::class, 'docs']);
+            Route::post('docs', [AiConfigController::class, 'uploadDoc']);
+            Route::delete('docs/{doc}', [AiConfigController::class, 'deleteDoc']);
+        });
+
+        // 需求接口：租户 AI 参数模板
+        Route::get('tenant/{tenantId}/ai-param-template-list', [AiParamTemplateController::class, 'list']);
+        Route::post('tenant/ai-param-template-save', [AiParamTemplateController::class, 'save']);
+        Route::post('tenant/ai-param-template-set-default', [AiParamTemplateController::class, 'setDefault']);
+        Route::delete('tenant/ai-param-template-del', [AiParamTemplateController::class, 'destroy']);
+        Route::get('tenant/{tenantId}/prompt-list', [AiParamTemplateController::class, 'promptList']);
+
+        // 租户列表「AI配置」弹窗：按套餐筛选 / 保存当前启用 / 租户信息
+        Route::get('tenant/{tenant_id}/ai-template-list-by-package', [AiParamTemplateController::class, 'listByPackage']);
+        Route::post('tenant/save-current-ai-template', [AiParamTemplateController::class, 'saveCurrent']);
+        Route::get('tenant/{tenant_id}/info', [AiParamTemplateController::class, 'tenantInfo']);
+
+        // 小红书账号 AI 绑定
+        Route::get('social-account/{id}/ai-config', [AiParamTemplateController::class, 'accountAiConfig']);
+        Route::post('social-account/save-ai-config', [AiParamTemplateController::class, 'saveAccountAiConfig']);
     });
 
     // CRM 线索

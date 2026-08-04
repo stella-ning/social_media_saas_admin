@@ -52,6 +52,9 @@
           <el-menu-item v-if="canAccess('/system/tenants')" index="/system/tenants">
             租户管理
           </el-menu-item>
+          <el-menu-item v-if="canAccess('/system/package-settings')" index="/system/package-settings">
+            套餐权限管理
+          </el-menu-item>
           <el-menu-item v-if="canAccess('/system/ai-config')" index="/system/ai-config">
             AI配置中心
           </el-menu-item>

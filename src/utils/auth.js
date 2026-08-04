@@ -13,6 +13,7 @@ export const ROLE_PERMISSIONS = {
     '/resource/crawler-tasks',
     '/resource/proxy-ip',
     '/system/tenants',
+    '/system/package-settings',
     '/system/ai-config',
     '/system/crm-leads',
     '/system/messages',

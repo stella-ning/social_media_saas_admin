@@ -19,7 +19,7 @@ class TenantService
         $page = max(1, (int) ($filters['page'] ?? 1));
         $size = min(100, max(1, (int) ($filters['size'] ?? 10)));
 
-        $query = Tenant::query()->orderByDesc('id');
+        $query = Tenant::query()->with('currentAiParamTemplate')->orderByDesc('id');
 
         if (!empty($filters['keyword'])) {
             $kw = $filters['keyword'];
@@ -79,7 +79,11 @@ class TenantService
             'kb' => $data['kb'] ?? $tenant->kb,
         ]);
         $this->bustCache($tenant->id);
-        return $tenant->fresh();
+
+        // 升级解锁 / 降级自动切换可用 AI 模板
+        \App\Support\PackageQuota::reconcileTenantAiTemplate($tenant->fresh());
+
+        return $tenant->fresh('currentAiParamTemplate');
     }
 
     public function toggleStatus(Tenant $tenant, int $status): Tenant

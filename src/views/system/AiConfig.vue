@@ -4,6 +4,7 @@
     <div class="page-header">
       <el-tabs v-model="activeTab" class="ai-tabs" @tab-change="onTabChange">
         <el-tab-pane label="Prompt模板配置" name="prompt" />
+        <el-tab-pane label="AI参数模板管理" name="params" />
         <el-tab-pane label="租户知识库管理" name="kb" />
       </el-tabs>
       <div v-if="showTenantFilter" class="tenant-filter">
@@ -65,6 +66,46 @@
           </el-card>
         </el-col>
       </el-row>
+    </div>
+
+    <!-- ========== Tab：AI参数模板管理 ========== -->
+    <div v-show="activeTab === 'params'">
+      <el-card shadow="hover">
+        <div class="kb-toolbar">
+          <h4 class="kb-title">租户 AI 参数模板（模型 / Key / 配额）</h4>
+          <el-button type="primary" :icon="Plus" @click="openParamEdit(null)">新建参数模板</el-button>
+        </div>
+        <el-table v-loading="paramLoading" :data="paramTemplates" border stripe style="width: 100%">
+          <el-table-column prop="templateName" label="模板名称" min-width="160" />
+          <el-table-column label="套餐等级" width="100" align="center">
+            <template #default="{ row }">
+              <el-tag size="small" :type="row.templateLevel === 3 ? 'warning' : row.templateLevel === 2 ? 'success' : ''">
+                {{ row.templateLevelLabel || '基础版' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="aiModel" label="模型" width="140" />
+          <el-table-column prop="apiBaseUrl" label="请求地址" min-width="180" show-overflow-tooltip />
+          <el-table-column label="温度/TopP" width="120" align="center">
+            <template #default="{ row }">{{ row.temperature }} / {{ row.topP }}</template>
+          </el-table-column>
+          <el-table-column prop="maxTokens" label="max_tokens" width="110" align="center" />
+          <el-table-column prop="dailyCallQuota" label="日配额" width="90" align="center" />
+          <el-table-column label="默认" width="90" align="center">
+            <template #default="{ row }">
+              <el-tag v-if="row.isDefault" type="success" size="small">默认</el-tag>
+              <el-button v-else link type="primary" size="small" @click="setParamDefault(row)">设为默认</el-button>
+            </template>
+          </el-table-column>
+          <el-table-column prop="apiKeyMasked" label="API-Key" width="100" align="center" />
+          <el-table-column label="操作" width="140" align="center" fixed="right">
+            <template #default="{ row }">
+              <el-button link type="primary" @click="openParamEdit(row)">编辑</el-button>
+              <el-button link type="danger" @click="deleteParam(row)">删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-card>
     </div>
 
     <!-- ========== Tab2：租户知识库管理 ========== -->
@@ -205,28 +246,108 @@
         <el-button type="primary" :loading="uploadLoading" @click="handleUpload">开始上传</el-button>
       </template>
     </el-dialog>
+    <!-- ========== AI参数模板编辑弹窗 ========== -->
+    <el-dialog
+      v-model="paramEditVisible"
+      :title="paramForm.id ? '编辑 AI 参数模板' : '新建 AI 参数模板'"
+      width="560px"
+      destroy-on-close
+    >
+      <el-form label-width="120px">
+        <el-form-item label="模板名称" required>
+          <el-input v-model="paramForm.templateName" placeholder="如：评论生成-生产环境" maxlength="128" />
+        </el-form-item>
+        <el-form-item label="模型名称" required>
+          <el-input v-model="paramForm.aiModel" placeholder="如：gpt-4o-mini" />
+        </el-form-item>
+        <el-form-item label="套餐等级" required>
+          <el-select v-model="paramForm.templateLevel" style="width: 100%">
+            <el-option label="基础版可用 (level=1)" :value="1" />
+            <el-option label="专业版可用 (level=2)" :value="2" />
+            <el-option label="企业版可用 (level=3)" :value="3" />
+          </el-select>
+          <div class="form-tip">配置中心可创建任意等级；租户列表弹窗按套餐过滤可选范围</div>
+        </el-form-item>
+        <el-form-item label="API-Key" :required="!paramForm.id">
+          <el-input
+            v-model="paramForm.apiKey"
+            type="password"
+            show-password
+            :placeholder="paramForm.id ? '留空表示不修改已保存密钥' : '将 AES-256 加密存储'"
+            autocomplete="new-password"
+          />
+        </el-form-item>
+        <el-form-item label="请求地址">
+          <el-input v-model="paramForm.apiBaseUrl" placeholder="https://api.openai.com/v1" />
+        </el-form-item>
+        <el-form-item label="temperature">
+          <el-slider v-model="paramForm.temperature" :min="0" :max="2" :step="0.01" show-input />
+        </el-form-item>
+        <el-form-item label="max_tokens">
+          <el-input-number v-model="paramForm.maxTokens" :min="1" :max="128000" style="width: 100%" />
+        </el-form-item>
+        <el-form-item label="top_p">
+          <el-slider v-model="paramForm.topP" :min="0" :max="1" :step="0.01" show-input />
+        </el-form-item>
+        <el-form-item label="每日调用配额">
+          <el-input-number v-model="paramForm.dailyCallQuota" :min="0" :max="1000000" style="width: 100%" />
+        </el-form-item>
+        <el-form-item label="设为默认">
+          <el-switch v-model="paramForm.isDefault" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="paramEditVisible = false">取消</el-button>
+        <el-button type="primary" :loading="paramSaving" @click="saveParamTemplate">保存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 /**
  * AI配置中心
- * - Tab1：Prompt模板配置（卡片列表 + 编辑/测试）
- * - Tab2：租户知识库管理（文档表格 + 上传）
+ * - Tab1：Prompt 话术模板
+ * - Tab2：AI 参数模板（模型/Key/配额，租户隔离）
+ * - Tab3：租户知识库
+ * - 支持 URL ?tenantId=&tab=params 从租户列表跳转带入
  */
 import { ref, reactive, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { Upload, Plus, Document, MoreFilled, MagicStick, UploadFilled } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { aiConfigApi, tenantApi } from '@/api'
+
+const route = useRoute()
+const router = useRouter()
 
 const activeTab = ref('prompt')
 const showTenantFilter = ref(false)
 const tenantOptions = ref([])
 const currentTenantId = ref('')
 
-/** 模板列表 */
+/** Prompt 模板列表 */
 const promptTemplates = ref([])
 const templatesLoading = ref(false)
+
+/** AI 参数模板 */
+const paramTemplates = ref([])
+const paramLoading = ref(false)
+const paramEditVisible = ref(false)
+const paramSaving = ref(false)
+const paramForm = reactive({
+  id: null,
+  templateName: '',
+  aiModel: 'gpt-4o-mini',
+  apiKey: '',
+  apiBaseUrl: 'https://api.openai.com/v1',
+  temperature: 0.7,
+  maxTokens: 2048,
+  topP: 1,
+  dailyCallQuota: 1000,
+  isDefault: false,
+  templateLevel: 1
+})
 
 /** 知识库文档 */
 const kbDocs = ref([])
@@ -248,21 +369,25 @@ const docIconColor = (name) => {
   return '#409eff'
 }
 
-/** 构建租户筛选参数 */
+/** 构建租户筛选参数（兼容 camel / snake） */
 const tenantParams = () => {
   if (currentTenantId.value) {
-    return { tenant_id: currentTenantId.value }
+    return { tenant_id: currentTenantId.value, tenantId: currentTenantId.value }
   }
   return {}
 }
 
-/** 加载租户选项（超管可见；403 则隐藏筛选，后端按用户租户范围） */
 const loadTenants = async () => {
   try {
     const data = await tenantApi.list({ page: 1, size: 100 })
     tenantOptions.value = data?.list || []
     showTenantFilter.value = tenantOptions.value.length > 0
-    if (showTenantFilter.value && !currentTenantId.value) {
+
+    // URL 优先选中租户
+    const qTenant = route.query.tenantId
+    if (qTenant && tenantOptions.value.some((t) => String(t.id) === String(qTenant))) {
+      currentTenantId.value = Number(qTenant) || qTenant
+    } else if (showTenantFilter.value && !currentTenantId.value) {
       currentTenantId.value = tenantOptions.value[0].id
     }
   } catch {
@@ -271,7 +396,6 @@ const loadTenants = async () => {
   }
 }
 
-/** 加载 Prompt 模板（兼容数组或 { list } 响应） */
 const loadTemplates = async () => {
   templatesLoading.value = true
   try {
@@ -284,7 +408,22 @@ const loadTemplates = async () => {
   }
 }
 
-/** 加载知识库文档 */
+const loadParamTemplates = async () => {
+  if (!currentTenantId.value) {
+    paramTemplates.value = []
+    return
+  }
+  paramLoading.value = true
+  try {
+    const data = await aiConfigApi.paramTemplateList(currentTenantId.value)
+    paramTemplates.value = data?.list || []
+  } catch {
+    paramTemplates.value = []
+  } finally {
+    paramLoading.value = false
+  }
+}
+
 const loadDocs = async () => {
   docsLoading.value = true
   try {
@@ -312,15 +451,136 @@ const onDocsSizeChange = (s) => {
 }
 
 const onTenantChange = () => {
+  // 同步 URL，便于分享/刷新保持
+  router.replace({
+    query: {
+      ...route.query,
+      tenantId: currentTenantId.value || undefined,
+      tab: activeTab.value
+    }
+  })
   loadTemplates()
+  if (activeTab.value === 'params') loadParamTemplates()
   if (activeTab.value === 'kb') loadDocs()
 }
 
 const onTabChange = (tab) => {
+  router.replace({
+    query: {
+      ...route.query,
+      tenantId: currentTenantId.value || undefined,
+      tab
+    }
+  })
+  if (tab === 'params') loadParamTemplates()
   if (tab === 'kb') loadDocs()
 }
 
-/* ----- 编辑模板 ----- */
+/* ----- AI 参数模板 ----- */
+const openParamEdit = (row) => {
+  if (row) {
+    Object.assign(paramForm, {
+      id: row.id,
+      templateName: row.templateName,
+      aiModel: row.aiModel,
+      apiKey: '',
+      apiBaseUrl: row.apiBaseUrl || '',
+      temperature: Number(row.temperature ?? 0.7),
+      maxTokens: Number(row.maxTokens ?? 2048),
+      topP: Number(row.topP ?? 1),
+      dailyCallQuota: Number(row.dailyCallQuota ?? 1000),
+      isDefault: !!row.isDefault,
+      templateLevel: Number(row.templateLevel || 1)
+    })
+  } else {
+    Object.assign(paramForm, {
+      id: null,
+      templateName: '',
+      aiModel: 'gpt-4o-mini',
+      apiKey: '',
+      apiBaseUrl: 'https://api.openai.com/v1',
+      temperature: 0.7,
+      maxTokens: 2048,
+      topP: 1,
+      dailyCallQuota: 1000,
+      isDefault: paramTemplates.value.length === 0,
+      templateLevel: 1
+    })
+  }
+  paramEditVisible.value = true
+}
+
+const saveParamTemplate = async () => {
+  if (!paramForm.templateName.trim() || !paramForm.aiModel.trim()) {
+    ElMessage.warning('请填写模板名称和模型名称')
+    return
+  }
+  if (!paramForm.id && !paramForm.apiKey.trim()) {
+    ElMessage.warning('新建模板必须填写 API-Key')
+    return
+  }
+  if (!currentTenantId.value) {
+    ElMessage.warning('请先选择租户')
+    return
+  }
+  paramSaving.value = true
+  try {
+    await aiConfigApi.paramTemplateSave({
+      id: paramForm.id || undefined,
+      tenant_id: currentTenantId.value,
+      template_name: paramForm.templateName.trim(),
+      ai_model: paramForm.aiModel.trim(),
+      api_key: paramForm.apiKey || undefined,
+      api_base_url: paramForm.apiBaseUrl,
+      temperature: paramForm.temperature,
+      max_tokens: paramForm.maxTokens,
+      top_p: paramForm.topP,
+      daily_call_quota: paramForm.dailyCallQuota,
+      is_default: paramForm.isDefault,
+      template_level: paramForm.templateLevel
+    })
+    ElMessage.success('AI 参数模板已保存')
+    paramEditVisible.value = false
+    paramForm.apiKey = ''
+    await loadParamTemplates()
+  } catch {
+    // ignore
+  } finally {
+    paramSaving.value = false
+  }
+}
+
+const setParamDefault = async (row) => {
+  try {
+    await aiConfigApi.paramTemplateSetDefault({
+      tenant_id: currentTenantId.value,
+      template_id: row.id
+    })
+    ElMessage.success('已设为租户默认模板')
+    await loadParamTemplates()
+  } catch {
+    // ignore
+  }
+}
+
+const deleteParam = (row) => {
+  ElMessageBox.confirm(`确认删除参数模板「${row.templateName}」？`, '提示', { type: 'warning' })
+    .then(async () => {
+      try {
+        await aiConfigApi.paramTemplateDelete({
+          tenant_id: currentTenantId.value,
+          template_id: row.id
+        })
+        ElMessage.success('已删除')
+        await loadParamTemplates()
+      } catch {
+        // ignore
+      }
+    })
+    .catch(() => {})
+}
+
+/* ----- 编辑 Prompt 模板 ----- */
 const editVisible = ref(false)
 const saveLoading = ref(false)
 const editForm = reactive({
@@ -418,7 +678,7 @@ const runTest = async () => {
     }
     if (currentTenantId.value) payload.tenantId = currentTenantId.value
     const data = await aiConfigApi.test(payload)
-    testResult.value = data?.reply || ''
+    testResult.value = data?.reply || data?.result || ''
     ElMessage.success('生成完成')
   } catch {
     // 错误已在拦截器提示
@@ -486,8 +746,15 @@ const deleteDoc = (row) => {
 }
 
 onMounted(async () => {
+  // 支持从租户列表跳转：?tenantId=1&tab=params
+  const qTab = route.query.tab
+  if (qTab && ['prompt', 'params', 'kb'].includes(String(qTab))) {
+    activeTab.value = String(qTab)
+  }
   await loadTenants()
   await loadTemplates()
+  if (activeTab.value === 'params') await loadParamTemplates()
+  if (activeTab.value === 'kb') await loadDocs()
 })
 </script>
 
@@ -627,6 +894,13 @@ onMounted(async () => {
 .total-tip {
   font-size: 13px;
   color: #909399;
+}
+
+.form-tip {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #909399;
+  line-height: 1.4;
 }
 
 .test-alert {

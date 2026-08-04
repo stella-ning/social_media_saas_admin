@@ -1,12 +1,13 @@
 {
-  "name": "social-ai-saas-api",
+  "name": "socialai/saas-api",
   "type": "project",
   "description": "SocialAI SaaS 社媒采集运营后台 API (Laravel 11)",
   "require": {
     "php": "^8.2",
     "laravel/framework": "^11.31",
     "laravel/sanctum": "^4.0",
-    "laravel/tinker": "^2.9"
+    "laravel/tinker": "^2.9",
+    "predis/predis": "^3.5"
   },
   "require-dev": {
     "fakerphp/faker": "^1.23",
@@ -47,7 +48,10 @@
   "config": {
     "optimize-autoloader": true,
     "preferred-install": "dist",
-    "sort-packages": true
+    "sort-packages": true,
+    "platform": {
+        "php": "8.2.23"
+    }
   },
   "minimum-stability": "stable",
   "prefer-stable": true

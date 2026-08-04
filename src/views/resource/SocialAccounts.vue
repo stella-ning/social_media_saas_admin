@@ -1,7 +1,7 @@
 <template>
   <div class="accounts-page">
     <el-card shadow="hover" class="table-card">
-      <!-- 顶部：所有租户筛选、刷新状态、绑定新账号 -->
+      <!-- 顶部：租户筛选、刷新状态、绑定新账号 -->
       <div class="toolbar">
         <div class="toolbar-left">
           <el-select
@@ -22,10 +22,10 @@
           </el-select>
           <el-button :loading="refreshing" @click="refreshStatus">刷新状态</el-button>
         </div>
-        <el-button type="primary" :icon="Plus" @click="bindVisible = true">绑定新账号</el-button>
+        <el-button type="primary" :icon="Plus" @click="openBindDialog">绑定新账号</el-button>
       </div>
 
-      <!-- 表格：账号信息(含UID)、平台、绑定IP、所属租户、状态、操作 -->
+      <!-- 表格：账号信息、平台、绑定IP、所属租户、状态、操作 -->
       <el-table v-loading="loading" :data="list" border stripe style="width: 100%">
         <el-table-column label="账号信息" min-width="200">
           <template #default="{ row }">
@@ -33,35 +33,42 @@
               <el-avatar :size="40" :src="row.avatar || defaultAvatar" />
               <div>
                 <div class="account-name">{{ row.name }}</div>
-                <div class="account-uid">UID: {{ row.uid }}</div>
+                <div class="account-uid">账号: {{ row.accountName || row.uid }}</div>
               </div>
             </div>
           </template>
         </el-table-column>
         <el-table-column prop="platform" label="平台" width="100" align="center" />
-        <el-table-column prop="bindIp" label="绑定IP" width="140">
+        <el-table-column prop="bindIp" label="绑定IP" width="160">
           <template #default="{ row }">
             <span class="mono">{{ row.bindIp || '-' }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="tenant" label="所属租户" min-width="140" />
-        <el-table-column label="状态" width="100" align="center">
+        <el-table-column label="状态" width="120" align="center">
           <template #default="{ row }">
-            <!-- 区分在线/离线状态标签 -->
             <el-tag :type="row.status === 'online' ? 'success' : 'danger'" size="small">
               {{ row.status === 'online' ? '在线' : '离线' }}
             </el-tag>
+            <div v-if="row.riskTip" class="risk-tip">{{ row.riskTip }}</div>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="160" align="center">
+        <el-table-column label="操作" width="220" align="center">
           <template #default="{ row }">
             <el-button link type="primary" @click="handleUnbind(row)">解绑</el-button>
+            <el-button
+              v-if="row.supportAccountAiConfig || row.platform === '小红书' || row.platformCode === 1"
+              link
+              type="primary"
+              @click="openAccountAi(row)"
+            >
+              账号AI配置
+            </el-button>
             <el-button link type="primary" @click="handleLog(row)">日志</el-button>
           </template>
         </el-table-column>
       </el-table>
 
-      <!-- 分页 -->
       <div class="pagination-wrap">
         <span class="total-tip">共 {{ total }} 条记录</span>
         <el-pagination
@@ -77,11 +84,22 @@
       </div>
     </el-card>
 
-    <!-- 绑定新账号弹窗 -->
-    <el-dialog v-model="bindVisible" title="绑定新账号" width="480px" destroy-on-close>
-      <el-form label-width="120px">
-        <el-form-item v-if="showTenantFilter" label="所属租户">
-          <el-select v-model="bindForm.tenantId" placeholder="选择租户" clearable style="width: 100%">
+    <!-- 绑定新账号：凭据 + 空闲代理，后端 Playwright 自动登录抓 Cookie -->
+    <el-dialog
+      v-model="bindVisible"
+      title="绑定新账号"
+      width="520px"
+      destroy-on-close
+      :close-on-click-modal="!binding"
+    >
+      <el-form ref="bindFormRef" :model="bindForm" :rules="bindRules" label-width="120px">
+        <el-form-item v-if="showTenantFilter" label="所属租户" prop="tenantId">
+          <el-select
+            v-model="bindForm.tenantId"
+            placeholder="选择租户"
+            style="width: 100%"
+            @change="onTenantChange"
+          >
             <el-option
               v-for="t in tenantOptions"
               :key="t.id"
@@ -90,71 +108,105 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="选择平台">
+        <el-form-item label="选择平台" prop="platform">
           <el-radio-group v-model="bindForm.platform">
             <el-radio-button value="小红书">小红书</el-radio-button>
             <el-radio-button value="抖音">抖音</el-radio-button>
             <el-radio-button value="视频号">视频号</el-radio-button>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="账号Cookie">
+        <el-form-item label="登录账号" prop="accountName">
           <el-input
-            v-model="bindForm.token"
-            type="textarea"
-            :rows="4"
-            placeholder="粘贴浏览器获取的账号授权信息"
+            v-model="bindForm.accountName"
+            placeholder="手机号 / 平台账号"
+            maxlength="128"
+            clearable
           />
         </el-form-item>
-        <el-form-item label="分配代理IP">
-          <el-select v-model="bindForm.proxyIpId" style="width: 100%" clearable>
-            <el-option label="自动分配 (推荐)" :value="''" />
+        <el-form-item label="登录密码" prop="password">
+          <el-input
+            v-model="bindForm.password"
+            type="password"
+            show-password
+            placeholder="输入后将 AES 加密存储，不明文落库"
+            maxlength="128"
+            autocomplete="new-password"
+          />
+        </el-form-item>
+        <el-form-item label="短信验证码" prop="code">
+          <el-input
+            v-model="bindForm.code"
+            placeholder="可选，登录遇到验证码时填写"
+            maxlength="16"
+            clearable
+          />
+        </el-form-item>
+        <el-form-item label="分配代理IP" prop="proxyIpId">
+          <el-select
+            v-model="bindForm.proxyIpId"
+            placeholder="仅显示当前租户空闲代理"
+            style="width: 100%"
+            :loading="proxyLoading"
+            filterable
+          >
             <el-option
-              v-for="p in proxyOptions"
+              v-for="p in freeProxyOptions"
               :key="p.id"
               :label="`${p.address}${p.location ? ' · ' + p.location : ''}`"
               :value="p.id"
             />
           </el-select>
+          <div class="form-tip">一号一IP：选中后该代理不可再绑其他账号</div>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="bindVisible = false">取消</el-button>
+        <el-button :disabled="binding" @click="bindVisible = false">取消</el-button>
         <el-button type="primary" :loading="binding" @click="handleBind">开始验证绑定</el-button>
       </template>
     </el-dialog>
 
-    <!-- 日志抽屉：后端暂无独立账号日志接口，展示账号关键状态摘要 -->
-    <el-drawer v-model="logVisible" :title="`账号日志 - ${logAccount?.name || ''}`" size="400px">
-      <el-empty v-if="!accountLogItems.length" description="暂无日志" />
-      <el-timeline v-else>
-        <el-timeline-item
-          v-for="(item, idx) in accountLogItems"
-          :key="idx"
-          :timestamp="item.time"
-          :type="item.type"
-        >
-          {{ item.content }}
-        </el-timeline-item>
-      </el-timeline>
+    <!-- 操作日志抽屉（后端脱敏日志） -->
+    <el-drawer v-model="logVisible" :title="`账号日志 - ${logAccount?.name || ''}`" size="420px">
+      <div v-loading="logsLoading">
+        <el-empty v-if="!accountLogItems.length" description="暂无日志" />
+        <el-timeline v-else>
+          <el-timeline-item
+            v-for="(item, idx) in accountLogItems"
+            :key="idx"
+            :timestamp="item.time"
+            :type="item.type"
+          >
+            {{ item.content }}
+          </el-timeline-item>
+        </el-timeline>
+      </div>
     </el-drawer>
+    <!-- 小红书账号 AI 配置弹窗 -->
+    <AccountAiConfigDialog
+      v-model="aiConfigVisible"
+      :account-id="aiConfigAccountId"
+      @saved="fetchList"
+    />
   </div>
 </template>
 
 <script setup>
 /**
  * 社媒账号管理
- * - useListQuery + socialAccountApi.list
- * - 绑定/解绑/刷新状态
+ * - 列表 / 解绑 / 日志
+ * - 绑定弹窗：租户 + 平台 + 账号密码 + 空闲代理 → POST /api/social-account/store
+ * - 废弃 Cookie 粘贴方案，由 Python Playwright 自动登录抓取
  */
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch, computed } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { socialAccountApi, tenantApi, proxyIpApi } from '@/api'
+import { socialAccountApi, tenantApi } from '@/api'
 import { useListQuery } from '@/composables/useListQuery'
+import { getCurrentUser } from '@/utils/auth'
+import AccountAiConfigDialog from '@/components/AccountAiConfigDialog.vue'
 
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
-/** 列表查询：tenantId 映射为后端 tenant_id */
 const {
   loading,
   list,
@@ -178,32 +230,99 @@ const {
 
 const showTenantFilter = ref(true)
 const tenantOptions = ref([])
-const proxyOptions = ref([])
+const freeProxyOptions = ref([])
+const proxyLoading = ref(false)
 const refreshing = ref(false)
 const binding = ref(false)
 
-/** 加载租户下拉（超管可用；403 则隐藏筛选） */
+const bindVisible = ref(false)
+const bindFormRef = ref(null)
+const bindForm = reactive({
+  tenantId: '',
+  platform: '抖音',
+  accountName: '',
+  password: '',
+  code: '',
+  proxyIpId: ''
+})
+
+const bindRules = computed(() => {
+  const rules = {
+    platform: [{ required: true, message: '请选择平台', trigger: 'change' }],
+    accountName: [{ required: true, message: '请输入登录账号', trigger: 'blur' }],
+    password: [{ required: true, message: '请输入登录密码', trigger: 'blur' }],
+    proxyIpId: [{ required: true, message: '请选择空闲代理 IP', trigger: 'change' }]
+  }
+  if (showTenantFilter.value) {
+    rules.tenantId = [{ required: true, message: '请选择所属租户', trigger: 'change' }]
+  }
+  return rules
+})
+
+/** 加载租户下拉（超管）；租户管理员隐藏并自动带本租户 */
 const loadTenantOptions = async () => {
+  const user = getCurrentUser()
   try {
     const data = await tenantApi.list({ page: 1, size: 100 })
     tenantOptions.value = (data?.list || []).map((t) => ({ id: t.id, name: t.name }))
+    showTenantFilter.value = true
   } catch {
     showTenantFilter.value = false
     tenantOptions.value = []
+    if (user?.tenantId) {
+      bindForm.tenantId = user.tenantId
+    }
   }
 }
 
-/** 加载可用代理 IP（绑定弹窗下拉） */
-const loadProxyOptions = async () => {
+/** 按租户加载空闲可用代理 IP */
+const loadFreeProxies = async (tenantId) => {
+  freeProxyOptions.value = []
+  bindForm.proxyIpId = ''
+  if (!tenantId) return
+  proxyLoading.value = true
   try {
-    const data = await proxyIpApi.list({ page: 1, size: 100 })
-    proxyOptions.value = data?.list || []
+    const data = await socialAccountApi.freeProxyIps(tenantId)
+    freeProxyOptions.value = data?.list || []
   } catch {
-    proxyOptions.value = []
+    freeProxyOptions.value = []
+  } finally {
+    proxyLoading.value = false
   }
 }
 
-/** 刷新账号在线状态 */
+const onTenantChange = (tid) => {
+  loadFreeProxies(tid)
+}
+
+const openBindDialog = async () => {
+  const user = getCurrentUser()
+  bindForm.platform = '抖音'
+  bindForm.accountName = ''
+  bindForm.password = ''
+  bindForm.code = ''
+  bindForm.proxyIpId = ''
+  if (!showTenantFilter.value && user?.tenantId) {
+    bindForm.tenantId = user.tenantId
+  } else if (!bindForm.tenantId && tenantOptions.value.length === 1) {
+    bindForm.tenantId = tenantOptions.value[0].id
+  }
+  bindVisible.value = true
+  if (bindForm.tenantId) {
+    await loadFreeProxies(bindForm.tenantId)
+  }
+}
+
+watch(
+  () => bindVisible.value,
+  (v) => {
+    if (!v) {
+      bindForm.password = ''
+      bindForm.code = ''
+    }
+  }
+)
+
 const refreshStatus = async () => {
   refreshing.value = true
   try {
@@ -211,15 +330,14 @@ const refreshStatus = async () => {
     ElMessage.success('账号状态已刷新')
     await fetchList()
   } catch {
-    // 错误已在拦截器提示
+    // 拦截器已提示
   } finally {
     refreshing.value = false
   }
 }
 
-/** 解绑账号 */
 const handleUnbind = (row) => {
-  ElMessageBox.confirm(`确认解绑账号「${row.name}」？`, '提示', {
+  ElMessageBox.confirm(`确认解绑账号「${row.name}」？将释放其专属代理 IP。`, '提示', {
     type: 'warning',
     confirmButtonText: '解绑',
     cancelButtonText: '取消'
@@ -230,7 +348,7 @@ const handleUnbind = (row) => {
         ElMessage.success('已解绑')
         await fetchList()
       } catch {
-        // 错误已在拦截器提示
+        // ignore
       }
     })
     .catch(() => {})
@@ -238,80 +356,82 @@ const handleUnbind = (row) => {
 
 const logVisible = ref(false)
 const logAccount = ref(null)
+const accountLogItems = ref([])
+const logsLoading = ref(false)
 
-/** 根据账号当前状态组装摘要日志（无独立 logs 接口时的兜底展示） */
-const accountLogItems = computed(() => {
-  const row = logAccount.value
-  if (!row) return []
-  const items = []
-  if (row.bindIp) {
-    items.push({
-      time: '',
-      type: 'primary',
-      content: `当前绑定代理：${row.bindIp}`
-    })
-  }
-  items.push({
-    time: '',
-    type: row.status === 'online' ? 'success' : 'danger',
-    content: row.status === 'online' ? '最近心跳：在线' : '最近心跳：离线'
-  })
-  items.push({
-    time: '',
-    type: 'success',
-    content: `账号已绑定（${row.platform} / UID ${row.uid}）`
-  })
-  return items
-})
-
-const handleLog = (row) => {
+const handleLog = async (row) => {
   logAccount.value = row
   logVisible.value = true
+  logsLoading.value = true
+  accountLogItems.value = []
+  try {
+    const data = await socialAccountApi.logs(row.id)
+    accountLogItems.value = (data?.list || []).map((item) => ({
+      time: item.time,
+      type: item.type === 'danger' ? 'danger' : item.type === 'warning' ? 'warning' : item.type === 'success' ? 'success' : 'primary',
+      content: item.content
+    }))
+  } catch {
+    accountLogItems.value = []
+  } finally {
+    logsLoading.value = false
+  }
 }
 
-/* ----- 绑定新账号 ----- */
-const bindVisible = ref(false)
-const bindForm = reactive({
-  platform: '抖音',
-  token: '',
-  proxyIpId: '',
-  tenantId: ''
-})
-
-const handleBind = async () => {
-  if (!bindForm.token.trim()) {
-    ElMessage.warning('请粘贴账号授权信息')
+/* ----- 小红书账号 AI 配置 ----- */
+const aiConfigVisible = ref(false)
+const aiConfigAccountId = ref(null)
+const openAccountAi = (row) => {
+  if (!(row.supportAccountAiConfig || row.platform === '小红书' || row.platformCode === 1)) {
+    ElMessage.info('抖音/视频号暂不支持账号级 AI 配置，将沿用租户默认模板')
     return
   }
+  aiConfigAccountId.value = row.id
+  aiConfigVisible.value = true
+}
+
+/** 提交绑定：调用后端自动登录 */
+const handleBind = async () => {
+  if (!bindFormRef.value) return
+  try {
+    await bindFormRef.value.validate()
+  } catch {
+    return
+  }
+
+  // 租户管理员无下拉时补齐 tenantId 校验
+  if (!bindForm.tenantId) {
+    ElMessage.warning('请选择所属租户')
+    return
+  }
+
   binding.value = true
   try {
-    const payload = {
+    await socialAccountApi.store({
+      tenant_id: bindForm.tenantId,
       platform: bindForm.platform,
-      cookie: bindForm.token,
-      tenantId: bindForm.tenantId || undefined,
-      name: `新绑定账号_${bindForm.platform}`
-    }
-    if (bindForm.proxyIpId) {
-      payload.proxyIpId = bindForm.proxyIpId
-    } else {
-      payload.ip = 'auto'
-    }
-    await socialAccountApi.create(payload)
+      account_name: bindForm.accountName.trim(),
+      password: bindForm.password,
+      code: bindForm.code?.trim() || undefined,
+      proxy_ip_id: bindForm.proxyIpId
+    })
     ElMessage.success('账号验证绑定成功')
     bindVisible.value = false
-    bindForm.token = ''
-    bindForm.proxyIpId = ''
-    bindForm.tenantId = ''
+    bindForm.password = ''
     await fetchList()
   } catch {
-    // 错误已在拦截器提示
+    // 错误已在拦截器提示（含验证码/风控文案）
   } finally {
     binding.value = false
   }
 }
 
 onMounted(async () => {
-  await Promise.all([fetchList(), loadTenantOptions(), loadProxyOptions()])
+  await Promise.all([fetchList(), loadTenantOptions()])
+  const user = getCurrentUser()
+  if (!showTenantFilter.value && user?.tenantId) {
+    bindForm.tenantId = user.tenantId
+  }
 })
 </script>
 
@@ -350,6 +470,17 @@ onMounted(async () => {
 .mono {
   font-family: 'SF Mono', Monaco, Menlo, Consolas, monospace;
   font-size: 13px;
+}
+.risk-tip {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #e6a23c;
+  line-height: 1.3;
+}
+.form-tip {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #909399;
 }
 .pagination-wrap {
   margin-top: 16px;

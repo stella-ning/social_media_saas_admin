@@ -12,8 +12,15 @@ class AiPromptTemplate extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'tenant_id', 'category', 'tag_type', 'name', 'desc', 'role', 'rules',
+        'tenant_id', 'category', 'tag_type', 'name', 'desc', 'role', 'rules', 'is_default',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'is_default' => 'integer',
+        ];
+    }
 
     public function tenant(): BelongsTo
     {
@@ -31,6 +38,7 @@ class AiPromptTemplate extends Model
             'desc' => $this->desc,
             'role' => $this->role,
             'rules' => $this->rules,
+            'isDefault' => (int) ($this->is_default ?? 0) === 1,
             'updateTime' => optional($this->updated_at)?->format('Y-m-d'),
         ];
     }

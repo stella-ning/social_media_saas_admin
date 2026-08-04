@@ -29,12 +29,55 @@ export const tenantApi = {
     http.get('/tenants/export', { params, responseType: 'blob' })
 }
 
+/* ========== 套餐权限（超管） ========== */
+export const packageSettingApi = {
+  list: () => http.get('/package-setting/list'),
+  save: (data) => http.post('/package-setting/save', data)
+}
+
+/* ========== AI配置 ========== */
+export const aiConfigApi = {
+  templates: (params) => http.get('/ai-config/templates', { params }),
+  saveTemplate: (data) => http.post('/ai-config/templates', data),
+  deleteTemplate: (id) => http.delete(`/ai-config/templates/${id}`),
+  test: (data) => http.post('/ai-config/test', data),
+  docs: (params) => http.get('/ai-config/docs', { params }),
+  uploadDoc: (data) => http.post('/ai-config/docs', data),
+  deleteDoc: (id) => http.delete(`/ai-config/docs/${id}`),
+
+  /** 租户 AI 参数模板 */
+  paramTemplateList: (tenantId) => http.get(`/tenant/${tenantId}/ai-param-template-list`),
+  paramTemplateSave: (data) => http.post('/tenant/ai-param-template-save', data),
+  paramTemplateSetDefault: (data) => http.post('/tenant/ai-param-template-set-default', data),
+  paramTemplateDelete: (data) =>
+    http.delete('/tenant/ai-param-template-del', { data }),
+  promptList: (tenantId) => http.get(`/tenant/${tenantId}/prompt-list`),
+
+  /** 租户列表弹窗：按套餐筛选模板 / 保存当前启用 / 租户信息 */
+  templateListByPackage: (tenantId) =>
+    http.get(`/tenant/${tenantId}/ai-template-list-by-package`),
+  saveCurrentAiTemplate: (data) => http.post('/tenant/save-current-ai-template', data),
+  tenantAiInfo: (tenantId) => http.get(`/tenant/${tenantId}/info`)
+}
+
 /* ========== 社媒账号 ========== */
 export const socialAccountApi = {
   list: (params) => http.get('/social-accounts', { params }),
-  create: (data) => http.post('/social-accounts', data),
+  /** 凭据自动登录绑定（推荐） */
+  store: (data) => http.post('/social-account/store', data),
+  /** 兼容旧路径 */
+  create: (data) => http.post('/social-account/store', data),
   remove: (id) => http.delete(`/social-accounts/${id}`),
-  refreshStatus: () => http.post('/social-accounts/refresh-status')
+  refreshStatus: () => http.post('/social-accounts/refresh-status'),
+  /** 租户空闲代理 IP */
+  freeProxyIps: (tenantId) => http.get(`/tenant/free-proxy-ip/${tenantId}`),
+  /** Cookie 会话检测 */
+  checkLogin: (accountId) => http.get(`/social-account/check-login/${accountId}`),
+  /** 操作日志 */
+  logs: (id) => http.get(`/social-accounts/${id}/logs`),
+  /** 小红书账号 AI 配置 */
+  getAiConfig: (id) => http.get(`/social-account/${id}/ai-config`),
+  saveAiConfig: (data) => http.post('/social-account/save-ai-config', data)
 }
 
 /* ========== 爬虫任务 ========== */
@@ -52,16 +95,6 @@ export const proxyIpApi = {
   check: (id) => http.post(`/proxy-ips/${id}/check`),
   bindTenant: (id, data) => http.put(`/proxy-ips/${id}/bind-tenant`, data),
   remove: (id) => http.delete(`/proxy-ips/${id}`)
-}
-
-/* ========== AI配置 ========== */
-export const aiConfigApi = {
-  templates: (params) => http.get('/ai-config/templates', { params }),
-  saveTemplate: (data) => http.post('/ai-config/templates', data),
-  test: (data) => http.post('/ai-config/test', data),
-  docs: (params) => http.get('/ai-config/docs', { params }),
-  uploadDoc: (data) => http.post('/ai-config/docs', data),
-  deleteDoc: (id) => http.delete(`/ai-config/docs/${id}`)
 }
 
 /* ========== CRM ========== */

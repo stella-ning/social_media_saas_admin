@@ -57,6 +57,12 @@ const routes = [
         meta: { title: '租户管理', parent: '系统管理', adminOnly: true }
       },
       {
+        path: 'system/package-settings',
+        name: 'PackageSettings',
+        component: () => import('@/views/system/PackageSettings.vue'),
+        meta: { title: '套餐权限管理', parent: '系统管理', adminOnly: true }
+      },
+      {
         path: 'system/ai-config',
         name: 'AiConfig',
         component: () => import('@/views/system/AiConfig.vue'),

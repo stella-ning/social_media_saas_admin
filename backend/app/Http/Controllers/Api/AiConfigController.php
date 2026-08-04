@@ -37,8 +37,12 @@ class AiConfigController extends Controller
             'tenantId' => ['nullable', 'integer'],
         ]);
         $data['tenantId'] = $this->resolveTenantId($request, $data['tenantId'] ?? null);
-        $tpl = $this->service->saveTemplate($data);
-        return ApiResponse::success($tpl->toFrontendArray(), '模板已保存');
+        try {
+            $tpl = $this->service->saveTemplate($data);
+            return ApiResponse::success($tpl->toFrontendArray(), '模板已保存');
+        } catch (\RuntimeException $e) {
+            return ApiResponse::error($e->getMessage(), 400);
+        }
     }
 
     public function deleteTemplate(AiPromptTemplate $template)
@@ -69,8 +73,12 @@ class AiConfigController extends Controller
             'tenantId' => ['nullable', 'integer'],
         ]);
         $data['tenantId'] = $this->resolveTenantId($request, $data['tenantId'] ?? null);
-        $doc = $this->service->uploadDoc($data);
-        return ApiResponse::success($doc->toFrontendArray(), '文档上传成功');
+        try {
+            $doc = $this->service->uploadDoc($data);
+            return ApiResponse::success($doc->toFrontendArray(), '文档上传成功');
+        } catch (\RuntimeException $e) {
+            return ApiResponse::error($e->getMessage(), 400);
+        }
     }
 
     public function deleteDoc(KnowledgeDoc $doc)
@@ -89,6 +97,9 @@ class AiConfigController extends Controller
         }
         if ($request->filled('tenantId')) {
             return (int) $request->input('tenantId');
+        }
+        if ($request->filled('tenant_id')) {
+            return (int) $request->input('tenant_id');
         }
         // 默认取第一个租户
         return (int) Tenant::query()->value('id');

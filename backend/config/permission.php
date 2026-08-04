@@ -16,7 +16,7 @@ return [
     'permissions' => [
         'super_admin' => [
             'dashboard', 'social-accounts', 'crawler-tasks', 'proxy-ips',
-            'tenants', 'ai-config', 'crm-leads', 'messages', 'settings', 'users',
+            'tenants', 'package-setting', 'ai-config', 'crm-leads', 'messages', 'settings', 'users',
         ],
         'tenant_admin' => [
             'dashboard', 'social-accounts', 'crawler-tasks',

@@ -17,6 +17,7 @@ class Tenant extends Model
     protected $fillable = [
         'name', 'contact', 'phone', 'email', 'package', 'status',
         'concurrent', 'ai_quota', 'binds', 'kb', 'remark',
+        'current_ai_param_template_id',
     ];
 
     protected function casts(): array
@@ -50,9 +51,16 @@ class Tenant extends Model
         return $this->hasMany(CrmLead::class);
     }
 
+    public function currentAiParamTemplate(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(AiParamTemplate::class, 'current_ai_param_template_id');
+    }
+
     /** 转为前端 camelCase 结构 */
     public function toFrontendArray(): array
     {
+        $this->loadMissing('currentAiParamTemplate');
+
         return [
             'id' => $this->id,
             'name' => $this->name,
@@ -67,6 +75,8 @@ class Tenant extends Model
             'binds' => $this->binds,
             'kb' => $this->kb,
             'remark' => $this->remark,
+            'currentAiParamTemplateId' => $this->current_ai_param_template_id,
+            'currentAiParamTemplateName' => $this->currentAiParamTemplate?->template_name,
         ];
     }
 }

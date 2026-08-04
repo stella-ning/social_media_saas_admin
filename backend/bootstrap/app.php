@@ -20,8 +20,14 @@ return Application::configure(basePath: dirname(__DIR__))
             'role.permission' => EnsureRolePermission::class,
         ]);
 
-        // API 使用 Sanctum，跨域由前端代理或 CORS 处理
-        $middleware->statefulApi();
+        // 使用 Bearer Token（auth:sanctum），不走 SPA Cookie/CSRF 流程。
+        // 若开启 statefulApi()，来自 SANCTUM_STATEFUL_DOMAINS 的请求会强制校验 CSRF，
+        // 导致前端 axios 登录报 “CSRF token mismatch.”
+        // $middleware->statefulApi();
+    })
+    ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
+        // 每 6 小时检测并刷新 Cookie 会话
+        $schedule->command('cookie:refresh-all')->everySixHours()->withoutOverlapping();
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (\Illuminate\Validation\ValidationException $e, Request $request) {

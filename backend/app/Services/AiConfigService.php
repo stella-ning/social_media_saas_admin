@@ -21,8 +21,13 @@ class AiConfigService
 
     public function saveTemplate(array $data): AiPromptTemplate
     {
+        $tenantId = (int) ($data['tenantId'] ?? $data['tenant_id']);
+        if (empty($data['id'])) {
+            \App\Support\PackageQuota::assertCanCreatePrompt($tenantId);
+        }
+
         $payload = [
-            'tenant_id' => $data['tenantId'] ?? $data['tenant_id'],
+            'tenant_id' => $tenantId,
             'category' => $data['category'],
             'tag_type' => $data['tagType'] ?? $data['tag_type'] ?? '',
             'name' => $data['name'],
@@ -64,9 +69,12 @@ class AiConfigService
 
     public function uploadDoc(array $data): KnowledgeDoc
     {
+        $tenantId = (int) ($data['tenantId'] ?? $data['tenant_id']);
+        \App\Support\PackageQuota::assertCanCreateKnowledge($tenantId);
+
         $name = $data['name'];
         $doc = KnowledgeDoc::create([
-            'tenant_id' => $data['tenantId'] ?? $data['tenant_id'],
+            'tenant_id' => $tenantId,
             'name' => $name,
             'size' => $data['size'] ?? '1.0 KB',
             'status' => 'processing',
