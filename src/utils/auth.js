@@ -1,36 +1,65 @@
 /**
  * 认证与权限工具（对接 Laravel Sanctum）
  * - Token / 用户信息存 localStorage
- * - 角色菜单权限白名单仍前端控制（与后端中间件双重校验）
+ * - 菜单：可见即可得（角色权限 ∩ 套餐权益）
  */
 import { setToken, getToken } from '@/utils/request'
 
-/** 角色菜单权限（路由 path） */
+/** 角色可访问的路由 path（再与套餐权益取交集） */
 export const ROLE_PERMISSIONS = {
   super_admin: [
     '/dashboard',
     '/resource/social-accounts',
     '/resource/crawler-tasks',
     '/resource/proxy-ip',
+    '/resource/ip-risk',
+    '/resource/comment-funnel',
     '/system/tenants',
     '/system/package-settings',
+    '/system/finance',
     '/system/ai-config',
     '/system/crm-leads',
     '/system/messages',
-    '/system/settings'
+    '/system/settings',
+    '/system/package-purchase',
+    '/system/sub-accounts',
+    '/system/industry-prompts',
+    '/system/crawler-behavior',
+    '/system/crm-reminders',
+    '/system/sensitive-words'
   ],
   tenant_admin: [
     '/dashboard',
     '/resource/social-accounts',
     '/resource/crawler-tasks',
+    '/resource/proxy-ip',
+    '/resource/ip-risk',
+    '/resource/comment-funnel',
     '/system/ai-config',
     '/system/crm-leads',
-    '/system/messages'
+    '/system/messages',
+    '/system/package-purchase',
+    '/system/sub-accounts',
+    '/system/industry-prompts',
+    '/system/crawler-behavior',
+    '/system/crm-reminders',
+    '/system/sensitive-words'
   ],
   operator: ['/dashboard', '/system/crm-leads', '/system/messages']
 }
 
-/** 快捷登录角色 → 演示账号（仅用于弹窗预填，密码需用户输入后调登录接口） */
+/**
+ * 套餐增值菜单门槛（与后端 PackageSetting 开关对齐）
+ * 超管不受限；租户/业务员按当前租户 package 过滤
+ */
+export const PACKAGE_MENU_GATES = {
+  '/resource/ip-risk': ['pro', 'ent'],
+  '/system/crawler-behavior': ['pro', 'ent'],
+  '/system/crm-reminders': ['pro', 'ent'],
+  '/system/sub-accounts': ['ent']
+}
+
+/** 快捷登录角色 → 演示账号 */
 export const ROLE_ACCOUNTS = {
   super_admin: {
     role: 'super_admin',
@@ -72,13 +101,12 @@ export function getCurrentUser() {
 }
 
 export function getCurrentRole() {
-  return getCurrentUser()?.role || 'super_admin'
+  const role = getCurrentUser()?.role
+  if (role && ROLE_PERMISSIONS[role]) return role
+  // 未登录或脏数据时不要默认升权成超管
+  return role || 'operator'
 }
 
-/**
- * 登录成功后写入会话
- * @param {{ token:string, user:object }} payload
- */
 export function setLoginSession(payload) {
   const { token, user } = payload
   setToken(token)
@@ -86,13 +114,25 @@ export function setLoginSession(payload) {
   localStorage.setItem(USER_KEY, JSON.stringify(user || {}))
   localStorage.setItem('currentRole', user?.role || '')
   localStorage.setItem('currentUsername', user?.username || '')
+  notifyAuthUserUpdated(user)
+  // 角色切换后清租户作用域缓存，避免超管列表串数据
+  try {
+    import('@/composables/useTenantScope').then((m) => m.invalidateTenantScopeCache?.())
+  } catch {
+    /* ignore */
+  }
 }
 
-/** 用 /auth/me 返回刷新本地用户缓存 */
 export function updateCurrentUser(user) {
   localStorage.setItem(USER_KEY, JSON.stringify(user || {}))
   localStorage.setItem('currentRole', user?.role || '')
   localStorage.setItem('currentUsername', user?.username || '')
+  notifyAuthUserUpdated(user)
+}
+
+function notifyAuthUserUpdated(user) {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new CustomEvent('auth-user-updated', { detail: user || null }))
 }
 
 export function clearLoginSession() {
@@ -103,22 +143,85 @@ export function clearLoginSession() {
   localStorage.removeItem('currentUsername')
 }
 
-export function hasPermission(path, role = getCurrentRole()) {
+export function normalizePath(path = '') {
+  return path.split('?')[0].split('#')[0]
+}
+
+/** 仅角色路由白名单 */
+export function hasRolePermission(path, role = getCurrentRole()) {
   const list = ROLE_PERMISSIONS[role] || []
-  const pure = (path || '').split('?')[0].split('#')[0]
-  return list.includes(pure)
+  return list.includes(normalizePath(path))
 }
 
-export function canSeeResourceMenu(role = getCurrentRole()) {
-  return (ROLE_PERMISSIONS[role] || []).some((p) => p.startsWith('/resource/'))
+/** 套餐是否允许该菜单（超管放行） */
+export function hasPackagePermission(path, user = getCurrentUser()) {
+  const pure = normalizePath(path)
+  const gate = PACKAGE_MENU_GATES[pure]
+  if (!gate) return true
+  if (!user || user.role === 'super_admin') return true
+  const pkg = user.package || 'basic'
+  return gate.includes(pkg)
 }
 
-export function canSeeSystemMenu(role = getCurrentRole()) {
-  return (ROLE_PERMISSIONS[role] || []).some((p) => p.startsWith('/system/'))
+/**
+ * 菜单/路由最终权限：角色 ∩ 套餐
+ * 可见即可得
+ */
+export function hasPermission(path, role = getCurrentRole(), user = getCurrentUser()) {
+  if (!hasRolePermission(path, role)) return false
+  return hasPackagePermission(path, user || { role, package: 'basic' })
 }
 
-export function getDefaultHome(role = getCurrentRole()) {
-  return (ROLE_PERMISSIONS[role] || [])[0] || '/dashboard'
+/** 当前角色可见菜单列表（已套餐过滤） */
+export function getVisibleMenus(role = getCurrentRole(), user = getCurrentUser()) {
+  return (ROLE_PERMISSIONS[role] || []).filter((p) => hasPermission(p, role, user))
+}
+
+/**
+ * 侧栏菜单分组（路径仍保持 /system|/resource，仅分类展示）
+ * - resource  采集资源
+ * - customer  客户运营
+ * - ai        AI 智能
+ * - package   套餐中心
+ * - platform  平台运营（超管）
+ * - settings  系统设置（超管）
+ */
+export const MENU_GROUPS = {
+  resource: [
+    '/resource/social-accounts',
+    '/resource/crawler-tasks',
+    '/resource/proxy-ip',
+    '/resource/ip-risk',
+    '/resource/comment-funnel',
+    '/system/crawler-behavior',
+    '/system/sensitive-words'
+  ],
+  customer: ['/system/messages', '/system/crm-leads', '/system/crm-reminders'],
+  ai: ['/system/ai-config', '/system/industry-prompts'],
+  package: ['/system/package-purchase', '/system/sub-accounts'],
+  platform: ['/system/tenants', '/system/package-settings', '/system/finance'],
+  settings: ['/system/settings']
+}
+
+export function canSeeMenuGroup(groupKey, role = getCurrentRole(), user = getCurrentUser()) {
+  const paths = MENU_GROUPS[groupKey] || []
+  return paths.some((p) => hasPermission(p, role, user))
+}
+
+export function canSeeResourceMenu(role = getCurrentRole(), user = getCurrentUser()) {
+  return canSeeMenuGroup('resource', role, user)
+}
+
+/** @deprecated 旧「系统管理」大组，拆分后请用 canSeeMenuGroup */
+export function canSeeSystemMenu(role = getCurrentRole(), user = getCurrentUser()) {
+  return ['customer', 'ai', 'package', 'platform', 'settings'].some((g) =>
+    canSeeMenuGroup(g, role, user)
+  )
+}
+
+export function getDefaultHome(role = getCurrentRole(), user = getCurrentUser()) {
+  const menus = getVisibleMenus(role, user)
+  return menus[0] || '/dashboard'
 }
 
 export function getUsernameByRole(role) {

@@ -15,6 +15,7 @@ return [
         'timeout' => (int) env('PYTHON_LOGIN_TIMEOUT', 120),
         'auto_login_path' => '/api/auto-login',
         'check_cookie_path' => '/api/check-cookie',
+        'comment_dry_run' => (bool) env('PYTHON_COMMENT_DRY_RUN', true),
     ],
 
     /*

@@ -19,6 +19,12 @@ class TenantPackageRequest extends FormRequest
             'aiQuota' => ['required', 'integer', 'min:1000', 'max:100000'],
             'binds' => ['required', 'integer', 'min:1', 'max:50'],
             'kb' => ['required', 'numeric', 'min:0.5', 'max:100'],
+            'maxProxyIp' => ['nullable', 'integer', 'min:-1'],
+            'max_proxy_ip' => ['nullable', 'integer', 'min:-1'],
+            'dailyProxyRequestLimit' => ['nullable', 'integer', 'min:-1'],
+            'daily_proxy_request_limit' => ['nullable', 'integer', 'min:-1'],
+            'allowSelfProxy' => ['nullable'],
+            'allow_self_proxy' => ['nullable'],
         ];
     }
 }

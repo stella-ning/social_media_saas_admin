@@ -7,6 +7,7 @@ import Layout from '@/layout/MainLayout.vue'
 import {
   isLoggedIn,
   getCurrentRole,
+  getCurrentUser,
   hasPermission,
   getDefaultHome
 } from '@/utils/auth'
@@ -51,40 +52,94 @@ const routes = [
         meta: { title: '代理IP管理', parent: '资源管理' }
       },
       {
+        path: 'resource/ip-risk',
+        name: 'IpRisk',
+        component: () => import('@/views/resource/IpRisk.vue'),
+        meta: { title: 'IP风险检测', parent: '资源管理' }
+      },
+      {
+        path: 'resource/comment-funnel',
+        name: 'CommentFunnel',
+        component: () => import('@/views/resource/CommentFunnel.vue'),
+        meta: { title: '评论引流日志', parent: '资源管理' }
+      },
+      {
+        path: 'system/sensitive-words',
+        name: 'SensitiveWords',
+        component: () => import('@/views/system/SensitiveWords.vue'),
+        meta: { title: '敏感词管理', parent: '资源管理' }
+      },
+      {
         path: 'system/tenants',
         name: 'Tenants',
         component: () => import('@/views/system/Tenants.vue'),
-        meta: { title: '租户管理', parent: '系统管理', adminOnly: true }
+        meta: { title: '租户管理', parent: '平台运营', adminOnly: true }
       },
       {
         path: 'system/package-settings',
         name: 'PackageSettings',
         component: () => import('@/views/system/PackageSettings.vue'),
-        meta: { title: '套餐权限管理', parent: '系统管理', adminOnly: true }
+        meta: { title: '套餐权限管理', parent: '平台运营', adminOnly: true }
+      },
+      {
+        path: 'system/finance',
+        name: 'FinanceReport',
+        component: () => import('@/views/system/FinanceReport.vue'),
+        meta: { title: '财务报表', parent: '平台运营', adminOnly: true }
+      },
+      {
+        path: 'system/package-purchase',
+        name: 'PackagePurchase',
+        component: () => import('@/views/system/PackagePurchase.vue'),
+        meta: { title: '套餐购买', parent: '套餐中心' }
+      },
+      {
+        path: 'system/sub-accounts',
+        name: 'SubAccounts',
+        component: () => import('@/views/system/SubAccounts.vue'),
+        meta: { title: '子账号管理', parent: '套餐中心' }
+      },
+      {
+        path: 'system/industry-prompts',
+        name: 'IndustryPrompts',
+        component: () => import('@/views/system/IndustryPrompts.vue'),
+        meta: { title: '行业Prompt商城', parent: 'AI智能' }
+      },
+      {
+        path: 'system/crawler-behavior',
+        name: 'CrawlerBehavior',
+        component: () => import('@/views/system/CrawlerBehavior.vue'),
+        meta: { title: '爬虫真人行为', parent: '资源管理' }
+      },
+      {
+        path: 'system/crm-reminders',
+        name: 'CrmReminders',
+        component: () => import('@/views/system/CrmReminders.vue'),
+        meta: { title: 'CRM跟进提醒', parent: '客户运营' }
       },
       {
         path: 'system/ai-config',
         name: 'AiConfig',
         component: () => import('@/views/system/AiConfig.vue'),
-        meta: { title: 'AI配置中心', parent: '系统管理' }
+        meta: { title: 'AI配置中心', parent: 'AI智能' }
       },
       {
         path: 'system/crm-leads',
         name: 'CrmLeads',
         component: () => import('@/views/system/CrmLeads.vue'),
-        meta: { title: 'CRM客户线索', parent: '系统管理' }
+        meta: { title: 'CRM客户线索', parent: '客户运营' }
       },
       {
         path: 'system/messages',
         name: 'Messages',
         component: () => import('@/views/system/Messages.vue'),
-        meta: { title: '消息会话管理', parent: '系统管理' }
+        meta: { title: '消息会话管理', parent: '客户运营' }
       },
       {
         path: 'system/settings',
         name: 'Settings',
         component: () => import('@/views/system/Settings.vue'),
-        meta: { title: '系统设置', parent: '系统管理' }
+        meta: { title: '系统设置', parent: '系统' }
       }
     ]
   },
@@ -122,10 +177,11 @@ router.beforeEach((to, from, next) => {
   }
 
   const role = getCurrentRole()
-  // 业务子页权限校验（排除布局根路径）
-  if (to.path !== '/' && !hasPermission(to.path, role)) {
-    ElMessage.warning('当前角色无权访问该页面')
-    next(getDefaultHome(role))
+  const user = getCurrentUser()
+  // 业务子页权限校验（排除布局根路径）：角色 ∩ 套餐
+  if (to.path !== '/' && !hasPermission(to.path, role, user)) {
+    ElMessage.warning('当前账号无权访问该页面')
+    next({ path: getDefaultHome(role, user), replace: true })
     return
   }
 

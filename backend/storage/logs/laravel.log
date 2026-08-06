@@ -770,3 +770,177 @@
 #62 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(23): require_once('/Users/stellani...')
 #63 {main}
 "} 
+[2026-08-05 15:45:18] local.INFO: ai_config.resolve {"account_id":1,"tenant_id":1,"platform":1} 
+[2026-08-05 15:45:38] local.INFO: ai_config.resolve {"account_id":1,"tenant_id":1,"platform":1} 
+[2026-08-05 19:46:47] local.ERROR: Writing to /Users/stellaning/.config/psysh/psysh_history is not allowed. {"exception":"[object] (ErrorException(code: 0): Writing to /Users/stellaning/.config/psysh/psysh_history is not allowed. at /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/psy/psysh/src/ConfigPaths.php:480)
+[stacktrace]
+#0 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php(258): Illuminate\\Foundation\\Bootstrap\\HandleExceptions->handleError(1024, 'Writing to /Use...', '/Users/stellani...', 480)
+#1 [internal function]: Illuminate\\Foundation\\Bootstrap\\HandleExceptions->Illuminate\\Foundation\\Bootstrap\\{closure}(1024, 'Writing to /Use...', '/Users/stellani...', 480)
+#2 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/psy/psysh/src/ConfigPaths.php(480): trigger_error('Writing to /Use...', 1024)
+#3 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/psy/psysh/src/Configuration.php(1068): Psy\\ConfigPaths::touchFileWithMkdir('/Users/stellani...')
+#4 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/psy/psysh/src/Configuration.php(1106): Psy\\Configuration->setHistoryFile('/Users/stellani...')
+#5 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/psy/psysh/src/Configuration.php(1285): Psy\\Configuration->getHistoryFile()
+#6 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/psy/psysh/src/Shell.php(192): Psy\\Configuration->getReadline()
+#7 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/psy/psysh/src/Shell.php(2213): Psy\\Shell->boot()
+#8 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/tinker/src/Console/TinkerCommand.php(77): Psy\\Shell->execute('echo json_encod...')
+#9 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): Laravel\\Tinker\\Console\\TinkerCommand->handle()
+#10 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Container/Util.php(43): Illuminate\\Container\\BoundMethod::Illuminate\\Container\\{closure}()
+#11 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(95): Illuminate\\Container\\Util::unwrapIfClosure(Object(Closure))
+#12 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\\Container\\BoundMethod::callBoundMethod(Object(Illuminate\\Foundation\\Application), Array, Object(Closure))
+#13 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Container/Container.php(696): Illuminate\\Container\\BoundMethod::call(Object(Illuminate\\Foundation\\Application), Array, Array, NULL)
+#14 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Console/Command.php(213): Illuminate\\Container\\Container->call(Array)
+#15 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/symfony/console/Command/Command.php(341): Illuminate\\Console\\Command->execute(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Illuminate\\Console\\OutputStyle))
+#16 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Console/Command.php(182): Symfony\\Component\\Console\\Command\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Illuminate\\Console\\OutputStyle))
+#17 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/symfony/console/Application.php(1117): Illuminate\\Console\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#18 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/symfony/console/Application.php(356): Symfony\\Component\\Console\\Application->doRunCommand(Object(Laravel\\Tinker\\Console\\TinkerCommand), Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#19 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/symfony/console/Application.php(195): Symfony\\Component\\Console\\Application->doRun(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#20 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony\\Component\\Console\\Application->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#21 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#22 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/artisan(14): Illuminate\\Foundation\\Application->handleCommand(Object(Symfony\\Component\\Console\\Input\\ArgvInput))
+#23 {main}
+"} 
+[2026-08-05 20:28:12] local.INFO: ai_config.resolve {"account_id":1,"tenant_id":1,"platform":1} 
+[2026-08-05 20:37:36] local.INFO: ai_config.resolve {"account_id":1,"tenant_id":1,"platform":1} 
+[2026-08-05 20:44:01] local.INFO: ai_config.resolve {"account_id":6,"tenant_id":2,"platform":1} 
+[2026-08-05 20:44:36] local.INFO: ai_config.resolve {"account_id":6,"tenant_id":2,"platform":1} 
+[2026-08-05 20:44:45] local.INFO: ai_config.resolve {"account_id":1,"tenant_id":1,"platform":1} 
+[2026-08-05 21:04:51] local.INFO: ai_config.resolve {"account_id":6,"tenant_id":2,"platform":1} 
+[2026-08-05 21:05:02] local.INFO: ai_config.resolve {"account_id":3,"tenant_id":1,"platform":1} 
+[2026-08-05 21:23:26] local.INFO: ai_config.resolve {"account_id":1,"tenant_id":1,"platform":1} 
+[2026-08-05 21:23:26] local.INFO: message.ai_reply {"session_id":1,"tenant_id":1,"account_id":1,"source":"account_param_template","prompt_id":1,"intent":"high"} 
+[2026-08-05 21:33:38] local.ERROR: Writing to /Users/stellaning/.config/psysh/psysh_history is not allowed. {"exception":"[object] (ErrorException(code: 0): Writing to /Users/stellaning/.config/psysh/psysh_history is not allowed. at /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/psy/psysh/src/ConfigPaths.php:480)
+[stacktrace]
+#0 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php(258): Illuminate\\Foundation\\Bootstrap\\HandleExceptions->handleError(1024, 'Writing to /Use...', '/Users/stellani...', 480)
+#1 [internal function]: Illuminate\\Foundation\\Bootstrap\\HandleExceptions->Illuminate\\Foundation\\Bootstrap\\{closure}(1024, 'Writing to /Use...', '/Users/stellani...', 480)
+#2 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/psy/psysh/src/ConfigPaths.php(480): trigger_error('Writing to /Use...', 1024)
+#3 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/psy/psysh/src/Configuration.php(1068): Psy\\ConfigPaths::touchFileWithMkdir('/Users/stellani...')
+#4 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/psy/psysh/src/Configuration.php(1106): Psy\\Configuration->setHistoryFile('/Users/stellani...')
+#5 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/psy/psysh/src/Configuration.php(1285): Psy\\Configuration->getHistoryFile()
+#6 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/psy/psysh/src/Shell.php(192): Psy\\Configuration->getReadline()
+#7 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/psy/psysh/src/Shell.php(2213): Psy\\Shell->boot()
+#8 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/tinker/src/Console/TinkerCommand.php(77): Psy\\Shell->execute('\\n$task = App\\\\Mo...')
+#9 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): Laravel\\Tinker\\Console\\TinkerCommand->handle()
+#10 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Container/Util.php(43): Illuminate\\Container\\BoundMethod::Illuminate\\Container\\{closure}()
+#11 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(95): Illuminate\\Container\\Util::unwrapIfClosure(Object(Closure))
+#12 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\\Container\\BoundMethod::callBoundMethod(Object(Illuminate\\Foundation\\Application), Array, Object(Closure))
+#13 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Container/Container.php(696): Illuminate\\Container\\BoundMethod::call(Object(Illuminate\\Foundation\\Application), Array, Array, NULL)
+#14 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Console/Command.php(213): Illuminate\\Container\\Container->call(Array)
+#15 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/symfony/console/Command/Command.php(341): Illuminate\\Console\\Command->execute(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Illuminate\\Console\\OutputStyle))
+#16 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Console/Command.php(182): Symfony\\Component\\Console\\Command\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Illuminate\\Console\\OutputStyle))
+#17 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/symfony/console/Application.php(1117): Illuminate\\Console\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#18 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/symfony/console/Application.php(356): Symfony\\Component\\Console\\Application->doRunCommand(Object(Laravel\\Tinker\\Console\\TinkerCommand), Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#19 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/symfony/console/Application.php(195): Symfony\\Component\\Console\\Application->doRun(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#20 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony\\Component\\Console\\Application->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#21 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#22 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/artisan(14): Illuminate\\Foundation\\Application->handleCommand(Object(Symfony\\Component\\Console\\Input\\ArgvInput))
+#23 {main}
+"} 
+[2026-08-05 21:33:49] local.INFO: ai_config.resolve {"account_id":1,"tenant_id":1,"platform":1} 
+[2026-08-05 21:33:49] local.INFO: message.ai_reply {"session_id":2,"tenant_id":1,"account_id":1,"source":"account_param_template","prompt_id":1,"intent":"high"} 
+[2026-08-05 21:33:49] local.INFO: ai_config.resolve {"account_id":1,"tenant_id":1,"platform":1} 
+[2026-08-05 21:33:49] local.INFO: message.ai_reply {"session_id":3,"tenant_id":1,"account_id":1,"source":"account_param_template","prompt_id":1,"intent":"high"} 
+[2026-08-05 21:36:51] local.INFO: ai_config.resolve {"account_id":6,"tenant_id":2,"platform":1} 
+[2026-08-05 21:36:51] local.INFO: message.ai_reply {"session_id":4,"tenant_id":2,"account_id":6,"source":"tenant_selected_param","prompt_id":4,"intent":"high"} 
+[2026-08-05 21:36:51] local.INFO: ai_config.resolve {"account_id":6,"tenant_id":2,"platform":1} 
+[2026-08-05 21:36:51] local.INFO: message.ai_reply {"session_id":5,"tenant_id":2,"account_id":6,"source":"tenant_selected_param","prompt_id":4,"intent":"high"} 
+[2026-08-05 22:10:09] local.INFO: package_setting.saved {"package_type":1} 
+[2026-08-05 22:10:09] local.INFO: package_setting.saved {"package_type":2} 
+[2026-08-05 22:10:09] local.INFO: package_setting.saved {"package_type":3} 
+[2026-08-05 22:10:09] local.ERROR: Undefined variable $day {"exception":"[object] (ErrorException(code: 0): Undefined variable $day at /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/app/Services/FinanceService.php:128)
+[stacktrace]
+#0 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php(258): Illuminate\\Foundation\\Bootstrap\\HandleExceptions->handleError(2, 'Undefined varia...', '/Users/stellani...', 128)
+#1 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/app/Services/FinanceService.php(128): Illuminate\\Foundation\\Bootstrap\\HandleExceptions->Illuminate\\Foundation\\Bootstrap\\{closure}(2, 'Undefined varia...', '/Users/stellani...', 128)
+#2 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php(106): App\\Services\\FinanceService->App\\Services\\{closure}(Object(App\\Models\\Tenant), 0)
+#3 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php(59): Illuminate\\Database\\Eloquent\\Builder->Illuminate\\Database\\Concerns\\{closure}(Object(Illuminate\\Database\\Eloquent\\Collection), 1)
+#4 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php(104): Illuminate\\Database\\Eloquent\\Builder->chunk(1000, Object(Closure))
+#5 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/app/Services/FinanceService.php(115): Illuminate\\Database\\Eloquent\\Builder->each(Object(Closure))
+#6 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/database/seeders/PackagePlatformProxySeeder.php(102): App\\Services\\FinanceService->aggregateDailyCosts('2026-08-05')
+#7 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): Database\\Seeders\\PackagePlatformProxySeeder->run()
+#8 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Container/Util.php(43): Illuminate\\Container\\BoundMethod::Illuminate\\Container\\{closure}()
+#9 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(95): Illuminate\\Container\\Util::unwrapIfClosure(Object(Closure))
+#10 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\\Container\\BoundMethod::callBoundMethod(Object(Illuminate\\Foundation\\Application), Array, Object(Closure))
+#11 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Container/Container.php(696): Illuminate\\Container\\BoundMethod::call(Object(Illuminate\\Foundation\\Application), Array, Array, NULL)
+#12 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Database/Seeder.php(188): Illuminate\\Container\\Container->call(Array, Array)
+#13 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Database/Seeder.php(197): Illuminate\\Database\\Seeder->Illuminate\\Database\\{closure}()
+#14 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Database/Console/Seeds/SeedCommand.php(70): Illuminate\\Database\\Seeder->__invoke()
+#15 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Concerns/GuardsAttributes.php(155): Illuminate\\Database\\Console\\Seeds\\SeedCommand->Illuminate\\Database\\Console\\Seeds\\{closure}()
+#16 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Database/Console/Seeds/SeedCommand.php(69): Illuminate\\Database\\Eloquent\\Model::unguarded(Object(Closure))
+#17 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): Illuminate\\Database\\Console\\Seeds\\SeedCommand->handle()
+#18 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Container/Util.php(43): Illuminate\\Container\\BoundMethod::Illuminate\\Container\\{closure}()
+#19 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(95): Illuminate\\Container\\Util::unwrapIfClosure(Object(Closure))
+#20 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\\Container\\BoundMethod::callBoundMethod(Object(Illuminate\\Foundation\\Application), Array, Object(Closure))
+#21 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Container/Container.php(696): Illuminate\\Container\\BoundMethod::call(Object(Illuminate\\Foundation\\Application), Array, Array, NULL)
+#22 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Console/Command.php(213): Illuminate\\Container\\Container->call(Array)
+#23 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/symfony/console/Command/Command.php(341): Illuminate\\Console\\Command->execute(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Illuminate\\Console\\OutputStyle))
+#24 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Console/Command.php(182): Symfony\\Component\\Console\\Command\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Illuminate\\Console\\OutputStyle))
+#25 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/symfony/console/Application.php(1117): Illuminate\\Console\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#26 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/symfony/console/Application.php(356): Symfony\\Component\\Console\\Application->doRunCommand(Object(Illuminate\\Database\\Console\\Seeds\\SeedCommand), Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#27 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/symfony/console/Application.php(195): Symfony\\Component\\Console\\Application->doRun(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#28 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony\\Component\\Console\\Application->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#29 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#30 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/artisan(14): Illuminate\\Foundation\\Application->handleCommand(Object(Symfony\\Component\\Console\\Input\\ArgvInput))
+#31 {main}
+"} 
+[2026-08-05 22:10:10] local.ERROR: Undefined variable $day {"exception":"[object] (ErrorException(code: 0): Undefined variable $day at /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/app/Services/FinanceService.php:128)
+[stacktrace]
+#0 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php(258): Illuminate\\Foundation\\Bootstrap\\HandleExceptions->handleError(2, 'Undefined varia...', '/Users/stellani...', 128)
+#1 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/app/Services/FinanceService.php(128): Illuminate\\Foundation\\Bootstrap\\HandleExceptions->Illuminate\\Foundation\\Bootstrap\\{closure}(2, 'Undefined varia...', '/Users/stellani...', 128)
+#2 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php(106): App\\Services\\FinanceService->App\\Services\\{closure}(Object(App\\Models\\Tenant), 0)
+#3 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php(59): Illuminate\\Database\\Eloquent\\Builder->Illuminate\\Database\\Concerns\\{closure}(Object(Illuminate\\Database\\Eloquent\\Collection), 1)
+#4 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php(104): Illuminate\\Database\\Eloquent\\Builder->chunk(1000, Object(Closure))
+#5 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/app/Services/FinanceService.php(115): Illuminate\\Database\\Eloquent\\Builder->each(Object(Closure))
+#6 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/app/Console/Commands/DailyFinanceCostCommand.php(23): App\\Services\\FinanceService->aggregateDailyCosts('2026-08-05')
+#7 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): App\\Console\\Commands\\DailyFinanceCostCommand->handle(Object(App\\Services\\FinanceService))
+#8 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Container/Util.php(43): Illuminate\\Container\\BoundMethod::Illuminate\\Container\\{closure}()
+#9 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(95): Illuminate\\Container\\Util::unwrapIfClosure(Object(Closure))
+#10 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\\Container\\BoundMethod::callBoundMethod(Object(Illuminate\\Foundation\\Application), Array, Object(Closure))
+#11 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Container/Container.php(696): Illuminate\\Container\\BoundMethod::call(Object(Illuminate\\Foundation\\Application), Array, Array, NULL)
+#12 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Console/Command.php(213): Illuminate\\Container\\Container->call(Array)
+#13 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/symfony/console/Command/Command.php(341): Illuminate\\Console\\Command->execute(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Illuminate\\Console\\OutputStyle))
+#14 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Console/Command.php(182): Symfony\\Component\\Console\\Command\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Illuminate\\Console\\OutputStyle))
+#15 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/symfony/console/Application.php(1117): Illuminate\\Console\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#16 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/symfony/console/Application.php(356): Symfony\\Component\\Console\\Application->doRunCommand(Object(App\\Console\\Commands\\DailyFinanceCostCommand), Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#17 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/symfony/console/Application.php(195): Symfony\\Component\\Console\\Application->doRun(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#18 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony\\Component\\Console\\Application->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#19 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#20 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/artisan(14): Illuminate\\Foundation\\Application->handleCommand(Object(Symfony\\Component\\Console\\Input\\ArgvInput))
+#21 {main}
+"} 
+[2026-08-05 22:10:45] local.INFO: package_setting.saved {"package_type":1} 
+[2026-08-05 22:10:45] local.INFO: package_setting.saved {"package_type":2} 
+[2026-08-05 22:10:45] local.INFO: package_setting.saved {"package_type":3} 
+[2026-08-05 22:15:45] local.INFO: package_setting.saved {"package_type":1} 
+[2026-08-05 22:16:20] local.INFO: package_setting.saved {"package_type":1} 
+[2026-08-05 22:16:39] local.INFO: package_setting.saved {"package_type":1} 
+[2026-08-05 22:24:26] local.INFO: package_setting.saved {"package_type":1} 
+[2026-08-05 22:24:26] local.INFO: package_setting.saved {"package_type":1} 
+[2026-08-05 22:25:44] local.INFO: package_setting.saved {"package_type":1} 
+[2026-08-05 22:26:26] local.INFO: package_setting.saved {"package_type":2} 
+[2026-08-05 22:27:01] local.INFO: package_setting.saved {"package_type":3} 
+[2026-08-05 23:00:07] local.ERROR: Writing to /Users/stellaning/.config/psysh/psysh_history is not allowed. {"exception":"[object] (ErrorException(code: 0): Writing to /Users/stellaning/.config/psysh/psysh_history is not allowed. at /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/psy/psysh/src/ConfigPaths.php:480)
+[stacktrace]
+#0 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php(258): Illuminate\\Foundation\\Bootstrap\\HandleExceptions->handleError(1024, 'Writing to /Use...', '/Users/stellani...', 480)
+#1 [internal function]: Illuminate\\Foundation\\Bootstrap\\HandleExceptions->Illuminate\\Foundation\\Bootstrap\\{closure}(1024, 'Writing to /Use...', '/Users/stellani...', 480)
+#2 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/psy/psysh/src/ConfigPaths.php(480): trigger_error('Writing to /Use...', 1024)
+#3 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/psy/psysh/src/Configuration.php(1068): Psy\\ConfigPaths::touchFileWithMkdir('/Users/stellani...')
+#4 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/psy/psysh/src/Configuration.php(1106): Psy\\Configuration->setHistoryFile('/Users/stellani...')
+#5 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/psy/psysh/src/Configuration.php(1285): Psy\\Configuration->getHistoryFile()
+#6 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/psy/psysh/src/Shell.php(192): Psy\\Configuration->getReadline()
+#7 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/psy/psysh/src/Shell.php(2213): Psy\\Shell->boot()
+#8 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/tinker/src/Console/TinkerCommand.php(77): Psy\\Shell->execute('\\necho 'tasks='....')
+#9 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): Laravel\\Tinker\\Console\\TinkerCommand->handle()
+#10 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Container/Util.php(43): Illuminate\\Container\\BoundMethod::Illuminate\\Container\\{closure}()
+#11 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(95): Illuminate\\Container\\Util::unwrapIfClosure(Object(Closure))
+#12 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\\Container\\BoundMethod::callBoundMethod(Object(Illuminate\\Foundation\\Application), Array, Object(Closure))
+#13 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Container/Container.php(696): Illuminate\\Container\\BoundMethod::call(Object(Illuminate\\Foundation\\Application), Array, Array, NULL)
+#14 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Console/Command.php(213): Illuminate\\Container\\Container->call(Array)
+#15 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/symfony/console/Command/Command.php(341): Illuminate\\Console\\Command->execute(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Illuminate\\Console\\OutputStyle))
+#16 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Console/Command.php(182): Symfony\\Component\\Console\\Command\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Illuminate\\Console\\OutputStyle))
+#17 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/symfony/console/Application.php(1117): Illuminate\\Console\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#18 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/symfony/console/Application.php(356): Symfony\\Component\\Console\\Application->doRunCommand(Object(Laravel\\Tinker\\Console\\TinkerCommand), Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#19 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/symfony/console/Application.php(195): Symfony\\Component\\Console\\Application->doRun(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#20 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony\\Component\\Console\\Application->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#21 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#22 /Users/stellaning/work/Facebook whatsApp/social_media_saas_admin/backend/artisan(14): Illuminate\\Foundation\\Application->handleCommand(Object(Symfony\\Component\\Console\\Input\\ArgvInput))
+#23 {main}
+"} 

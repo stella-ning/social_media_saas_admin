@@ -1,6 +1,10 @@
 <template>
   <div class="dashboard-page" v-loading="loading">
-    <!-- ========== 顶部 4 个数据统计卡片 ========== -->
+    <div v-if="scopeLabel" class="scope-bar">
+      <el-tag type="info" effect="plain">数据范围：{{ scopeLabel }}</el-tag>
+    </div>
+
+    <!-- ========== 顶部统计卡片 ========== -->
     <el-row :gutter="20" class="stat-row">
       <el-col :xs="24" :sm="12" :md="6" v-for="item in statCards" :key="item.title">
         <el-card shadow="hover" class="stat-card">
@@ -9,8 +13,13 @@
               <p class="stat-label">{{ item.title }}</p>
               <h3 class="stat-value">{{ item.value }}</h3>
               <p class="stat-trend" :class="item.trendUp ? 'up' : 'down'">
-                <el-icon><Top v-if="item.trendUp" /><Bottom v-else /></el-icon>
-                {{ item.percent }} {{ item.compare }}
+                <template v-if="item.percent && item.percent !== '—'">
+                  <el-icon><Top v-if="item.trendUp" /><Bottom v-else /></el-icon>
+                  {{ item.percent }} {{ item.compare }}
+                </template>
+                <template v-else>
+                  <span class="stat-sub">{{ item.compare }}</span>
+                </template>
               </p>
             </div>
             <div class="stat-icon" :style="{ background: item.bg, color: item.color }">
@@ -21,47 +30,64 @@
       </el-col>
     </el-row>
 
-    <!-- ========== ECharts 图表区域 ========== -->
+    <!-- ========== ECharts ========== -->
     <el-row :gutter="20" class="chart-row">
-      <!-- 图表1：任务趋势折线图 -->
       <el-col :xs="24" :md="14">
         <el-card shadow="hover" class="chart-card">
           <template #header>
-            <span class="chart-title">任务趋势图</span>
+            <span class="chart-title">近 7 日业务趋势</span>
           </template>
           <v-chart class="chart" :option="trendOption" autoresize />
         </el-card>
       </el-col>
 
-      <!-- 图表2：客户意向饼图 -->
       <el-col :xs="24" :md="10">
         <el-card shadow="hover" class="chart-card">
           <template #header>
-            <span class="chart-title">客户意向分布图</span>
+            <span class="chart-title">{{ pieTitle }}</span>
           </template>
           <v-chart class="chart" :option="pieOption" autoresize />
         </el-card>
       </el-col>
     </el-row>
 
-    <!-- 底部版本标注 -->
+    <el-row v-if="platformBars.length" :gutter="20" class="chart-row">
+      <el-col :span="24">
+        <el-card shadow="hover" class="chart-card">
+          <template #header>
+            <span class="chart-title">社媒平台任务分布</span>
+          </template>
+          <div class="platform-bars">
+            <div v-for="p in platformBars" :key="p.label" class="platform-bar-item">
+              <span class="p-label">{{ p.label }}</span>
+              <el-progress
+                :percentage="platformPercent(p.value)"
+                :stroke-width="14"
+                :format="() => String(p.value)"
+              />
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
+
     <div class="page-version">SocialAI SaaS 社媒采集运营后台 · {{ version }}</div>
   </div>
 </template>
 
 <script setup>
 /**
- * 首页仪表盘
- * - onMounted 调用 dashboardApi.overview 填充统计卡片与图表
- * - 保留原有卡片/图表布局与样式
+ * 首页仪表盘：按角色/租户展示真实平台数据
  */
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { dashboardApi } from '@/api'
+import { getCurrentRole } from '@/utils/auth'
 
 const loading = ref(false)
 const version = ref('v1.0.0 Stable')
+const scopeLabel = ref('')
+const platformBars = ref([])
 
-/** 卡片图标与配色（后端不返回，前端按序补齐） */
 const CARD_STYLES = [
   { icon: 'List', bg: '#ecf5ff', color: '#409eff' },
   { icon: 'User', bg: '#f0f9eb', color: '#67c23a' },
@@ -69,19 +95,28 @@ const CARD_STYLES = [
   { icon: 'OfficeBuilding', bg: '#f4f4f5', color: '#909399' }
 ]
 
+const pieTitle = computed(() =>
+  getCurrentRole() === 'operator' ? '我的客户意向分布' : '客户意向分布'
+)
+
+const platformMax = computed(() =>
+  Math.max(1, ...platformBars.value.map((p) => p.value || 0))
+)
+
+const platformPercent = (value) =>
+  Math.round(((value || 0) / platformMax.value) * 100)
+
 const statCards = ref([])
 
-/** 任务趋势折线图配置 */
 const trendOption = ref({
   tooltip: { trigger: 'axis' },
   legend: { data: [], bottom: 0 },
   grid: { top: 40, left: 40, right: 20, bottom: 40 },
   xAxis: { type: 'category', data: [] },
-  yAxis: { type: 'value' },
+  yAxis: { type: 'value', minInterval: 1 },
   series: []
 })
 
-/** 客户意向饼图配置 */
 const pieOption = ref({
   tooltip: { trigger: 'item' },
   legend: { orient: 'vertical', left: 'left' },
@@ -101,11 +136,13 @@ const pieOption = ref({
   ]
 })
 
-/** 加载仪表盘概览数据 */
 const loadOverview = async () => {
   loading.value = true
   try {
     const data = await dashboardApi.overview()
+
+    scopeLabel.value = data?.scope?.label || ''
+    platformBars.value = data?.platformBreakdown || []
 
     statCards.value = (data?.statCards || []).map((item, i) => ({
       ...item,
@@ -123,7 +160,7 @@ const loadOverview = async () => {
       },
       grid: { top: 40, left: 40, right: 20, bottom: 40 },
       xAxis: { type: 'category', data: trend.xAxis || [] },
-      yAxis: { type: 'value' },
+      yAxis: { type: 'value', minInterval: 1 },
       series: (trend.series || []).map((s) => ({
         name: s.name,
         type: 'line',
@@ -135,6 +172,11 @@ const loadOverview = async () => {
     }
 
     const pie = data?.intentPie || []
+    const pieData = pie.map((item) => ({
+      value: item.value,
+      name: item.name,
+      itemStyle: { color: item.color }
+    }))
     pieOption.value = {
       tooltip: { trigger: 'item' },
       legend: { orient: 'vertical', left: 'left' },
@@ -142,11 +184,9 @@ const loadOverview = async () => {
         {
           type: 'pie',
           radius: '70%',
-          data: pie.map((item) => ({
-            value: item.value,
-            name: item.name,
-            itemStyle: { color: item.color }
-          })),
+          data: pieData.some((d) => d.value > 0)
+            ? pieData
+            : [{ value: 0, name: '暂无线索', itemStyle: { color: '#dcdfe6' } }],
           emphasis: {
             itemStyle: {
               shadowBlur: 10,
@@ -164,12 +204,27 @@ const loadOverview = async () => {
   }
 }
 
-onMounted(loadOverview)
+const onAuthUpdated = () => {
+  loadOverview()
+}
+
+onMounted(() => {
+  loadOverview()
+  window.addEventListener('auth-user-updated', onAuthUpdated)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('auth-user-updated', onAuthUpdated)
+})
 </script>
 
 <style scoped>
 .dashboard-page {
   min-height: 100%;
+}
+
+.scope-bar {
+  margin-bottom: 12px;
 }
 
 .stat-row {
@@ -213,6 +268,9 @@ onMounted(loadOverview)
 .stat-trend.down {
   color: #f56c6c;
 }
+.stat-sub {
+  color: #909399;
+}
 
 .stat-icon {
   width: 48px;
@@ -242,6 +300,25 @@ onMounted(loadOverview)
 .chart {
   height: 320px;
   width: 100%;
+}
+
+.platform-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 8px 4px 4px;
+}
+
+.platform-bar-item {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.p-label {
+  font-size: 14px;
+  color: #606266;
 }
 
 .page-version {

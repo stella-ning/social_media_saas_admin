@@ -37,6 +37,16 @@
         <el-table-column prop="platform" label="平台" width="100" align="center" />
         <el-table-column prop="target" label="关键词/监控对象" min-width="200" show-overflow-tooltip />
         <el-table-column prop="tenant" label="所属租户" min-width="140" />
+        <el-table-column label="执行账号" min-width="140" show-overflow-tooltip>
+          <template #default="{ row }">
+            {{ row.socialAccountName || '—' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="平台代理" min-width="140" show-overflow-tooltip>
+          <template #default="{ row }">
+            <span class="mono">{{ row.boundProxyIp || '启动时自动分配' }}</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="frequency" label="执行频率" width="110" align="center" />
         <el-table-column label="状态" width="110" align="center">
           <template #default="{ row }">
@@ -51,9 +61,17 @@
             <strong>{{ row.todayCount }}</strong>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200" align="center" fixed="right">
+        <el-table-column label="操作" width="280" align="center" fixed="right">
           <template #default="{ row }">
             <el-button link type="primary" @click="handleLog(row)">日志</el-button>
+            <el-button
+              link
+              type="warning"
+              :loading="row._collectLoading"
+              @click="simulateCollect(row)"
+            >
+              模拟采集接入
+            </el-button>
             <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
             <el-button
               link
@@ -122,6 +140,7 @@ import { ElMessage } from 'element-plus'
 import CreateTaskDialog from '@/components/CreateTaskDialog.vue'
 import { crawlerTaskApi, tenantApi } from '@/api'
 import { useListQuery } from '@/composables/useListQuery'
+import { getCurrentRole } from '@/utils/auth'
 
 const {
   loading,
@@ -144,13 +163,18 @@ const {
   { tenantId: '', keyword: '' }
 )
 
-const showTenantFilter = ref(true)
+const showTenantFilter = ref(getCurrentRole() === 'super_admin')
 const tenantOptions = ref([])
 const dialogVisible = ref(false)
 const creating = ref(false)
 
-/** 加载租户下拉 */
+/** 加载租户下拉（仅超管；租户角色不请求 /tenants） */
 const loadTenantOptions = async () => {
+  if (getCurrentRole() !== 'super_admin') {
+    showTenantFilter.value = false
+    tenantOptions.value = []
+    return
+  }
   try {
     const data = await tenantApi.list({ page: 1, size: 100 })
     tenantOptions.value = (data?.list || []).map((t) => ({ id: t.id, name: t.name }))
@@ -172,6 +196,27 @@ const toggleStatus = async (row) => {
     // 错误已在拦截器提示
   } finally {
     row._toggleLoading = false
+  }
+}
+
+/**
+ * 演示闭环：采集同行评论区 → 识别咨询留言 → 接入消息会话（触发 AI）
+ */
+const simulateCollect = async (row) => {
+  row._collectLoading = true
+  try {
+    const data = await crawlerTaskApi.simulateCollect(row.id)
+    const n = data?.inquiry ?? 0
+    ElMessage.success(
+      n > 0
+        ? `已接入 ${n} 条咨询留言，请到「消息会话」查看 AI 接待结果`
+        : '采集完成，未识别到咨询类留言'
+    )
+    await fetchList()
+  } catch {
+    // 错误已在拦截器提示
+  } finally {
+    row._collectLoading = false
   }
 }
 
@@ -274,5 +319,10 @@ onMounted(async () => {
 .total-tip {
   font-size: 13px;
   color: #909399;
+}
+.mono {
+  font-family: 'SF Mono', Monaco, Menlo, Consolas, monospace;
+  font-size: 12px;
+  color: #606266;
 }
 </style>

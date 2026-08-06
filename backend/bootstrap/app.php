@@ -28,6 +28,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
         // 每 6 小时检测并刷新 Cookie 会话
         $schedule->command('cookie:refresh-all')->everySixHours()->withoutOverlapping();
+        // 每小时调度运行中爬虫：取账号 Cookie + 专属代理
+        $schedule->command('crawler:dispatch')->hourly()->withoutOverlapping();
+        // 每小时关闭闲置消息会话
+        $schedule->command('messages:close-idle')->hourly()->withoutOverlapping();
+        // 每日凌晨统计公共资源消耗与成本台账，并暂停到期套餐
+        $schedule->command('finance:daily-cost')->dailyAt('00:10')->withoutOverlapping();
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (\Illuminate\Validation\ValidationException $e, Request $request) {

@@ -1,175 +1,239 @@
 <template>
   <div class="proxy-page">
-    <el-card shadow="hover" class="table-card">
-      <!-- 顶部：导入代理IP -->
-      <div class="toolbar">
-        <h3 class="page-title">代理IP池</h3>
-        <el-button type="primary" :icon="Plus" @click="importVisible = true">导入代理IP</el-button>
-      </div>
+    <el-alert
+      type="info"
+      :closable="false"
+      show-icon
+      title="全部爬虫网络请求统一使用平台公共住宅代理 IP 池；已关闭租户自有代理上传入口"
+      style="margin-bottom: 16px"
+    />
 
-      <!-- 表格字段：服务器地址、归属地、协议类型、状态、当前负载、操作 -->
-      <el-table v-loading="loading" :data="list" border stripe style="width: 100%">
-        <el-table-column prop="address" label="服务器地址" min-width="180">
-          <template #default="{ row }">
-            <span class="mono">{{ row.address }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="location" label="归属地" width="140" />
-        <el-table-column prop="protocol" label="协议类型" width="140" />
-        <el-table-column label="状态" width="120" align="center">
-          <template #default="{ row }">
-            <span class="status-dot" :class="row.status">
-              <i class="dot"></i>
-              {{ row.status === 'running' ? '运行中' : row.status === 'error' ? '异常' : '空闲' }}
-            </span>
-          </template>
-        </el-table-column>
-        <el-table-column label="当前负载" width="120" align="center">
-          <template #default="{ row }">
-            {{ row.load }}/{{ row.capacity }}
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="160" align="center">
-          <template #default="{ row }">
-            <el-button
-              link
-              type="primary"
-              :loading="checkingId === row.id"
-              @click="handleCheck(row)"
-            >
-              检测
-            </el-button>
-            <el-button link type="danger" @click="handleRemove(row)">移除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
+    <el-tabs v-model="activeTab">
+      <el-tab-pane label="平台公共IP池" name="pool">
+        <el-card shadow="hover">
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <el-tag type="success">平台托管</el-tag>
+              <span class="hint">{{ isAdmin ? '超管可导入公共池 / 企业专属隔离池' : '仅展示已分配给当前租户的 IP' }}</span>
+            </div>
+            <div v-if="isAdmin" class="toolbar-right">
+              <el-button type="primary" @click="openImport('public')">导入公共池</el-button>
+              <el-button @click="openImport('dedicated')">导入专属隔离池</el-button>
+            </div>
+            <div v-else class="toolbar-right">
+              <el-button @click="loadAllocated">刷新分配</el-button>
+            </div>
+          </div>
 
-      <!-- 分页 -->
-      <div class="pagination-wrap">
-        <span class="total-tip">共 {{ total }} 条记录</span>
-        <el-pagination
-          v-model:current-page="page"
-          v-model:page-size="size"
-          :page-sizes="[10, 20, 50]"
-          :total="total"
-          layout="sizes, prev, pager, next, jumper"
-          background
-          @current-change="handlePageChange"
-          @size-change="handleSizeChange"
-        />
-      </div>
-    </el-card>
+          <el-table v-loading="loading" :data="list" border stripe>
+            <el-table-column prop="address" label="服务器地址" min-width="160">
+              <template #default="{ row }"><span class="mono">{{ row.address }}</span></template>
+            </el-table-column>
+            <el-table-column prop="poolTypeLabel" label="池类型" width="120" />
+            <el-table-column prop="location" label="归属地" width="140" />
+            <el-table-column prop="tenant" label="分配租户" width="140">
+              <template #default="{ row }">{{ row.tenant || '—' }}</template>
+            </el-table-column>
+            <el-table-column prop="riskLevel" label="风险" width="90" align="center" />
+            <el-table-column label="状态" width="100" align="center">
+              <template #default="{ row }">
+                {{ row.status === 'running' ? '运行中' : row.status === 'error' ? '异常' : '空闲' }}
+              </template>
+            </el-table-column>
+            <el-table-column label="负载" width="90" align="center">
+              <template #default="{ row }">{{ row.load }}/{{ row.capacity }}</template>
+            </el-table-column>
+            <el-table-column label="操作" width="200" align="center" fixed="right">
+              <template #default="{ row }">
+                <el-button link type="primary" :loading="checkingId === row.id" @click="handleCheck(row)">检测</el-button>
+                <el-button link type="primary" @click="openLogs(row)">访问日志</el-button>
+                <el-button v-if="isAdmin" link type="danger" @click="handleRemove(row)">移除</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
 
-    <!-- 导入代理IP弹窗 -->
-    <el-dialog v-model="importVisible" title="导入代理IP" width="480px" destroy-on-close>
+          <div class="pagination-wrap">
+            <span class="total-tip">共 {{ total }} 条</span>
+            <el-pagination
+              v-model:current-page="page"
+              v-model:page-size="size"
+              :total="total"
+              layout="sizes, prev, pager, next"
+              background
+              @current-change="fetchList"
+              @size-change="fetchList"
+            />
+          </div>
+        </el-card>
+
+        <el-card v-if="!isAdmin && quota" shadow="hover" style="margin-top: 16px">
+          <h3 class="page-title">套餐 IP 权限</h3>
+          <el-descriptions :column="2" border>
+            <el-descriptions-item label="套餐">{{ quota.packageLabel }}</el-descriptions-item>
+            <el-descriptions-item label="日请求">{{ quota.dailyProxyRequestUsed }}/{{ quota.dailyProxyRequestLimit ?? '∞' }}</el-descriptions-item>
+            <el-descriptions-item label="已分配">{{ quota.boundProxyIp }}/{{ quota.maxProxyIp ?? '∞' }}</el-descriptions-item>
+            <el-descriptions-item label="平台">{{ formatPlatforms(quota.allowPlatforms, '、') }}</el-descriptions-item>
+          </el-descriptions>
+          <div v-if="quota.enableDedicatedIpPool" class="flags" style="margin-top: 12px">
+            <el-switch v-model="dedicatedOn" active-text="专属隔离池" @change="saveFlags" />
+            <el-switch
+              v-if="quota.enableIpRotate"
+              v-model="rotateOn"
+              active-text="IP自动轮换"
+              style="margin-left: 16px"
+              @change="saveFlags"
+            />
+          </div>
+        </el-card>
+      </el-tab-pane>
+    </el-tabs>
+
+    <el-dialog v-model="importVisible" :title="importPool === 'dedicated' ? '导入企业专属隔离池' : '导入平台公共住宅代理'" width="520px">
+      <el-alert type="warning" :closable="false" title="禁止导入租户自有外部代理；仅平台运维资源" style="margin-bottom: 12px" />
       <el-form label-width="100px">
-        <el-form-item label="IP列表">
-          <el-input
-            v-model="importForm.list"
-            type="textarea"
-            :rows="6"
-            placeholder="格式：IP:端口:用户名:密码（一行一个）"
-          />
-          <div class="form-tip">支持 HTTP/HTTPS 协议，批量导入请用换行分隔</div>
+        <el-form-item v-if="importPool === 'dedicated'" label="企业租户">
+          <el-select v-model="importTenantId" filterable style="width: 100%">
+            <el-option v-for="t in tenants" :key="t.id" :label="t.name" :value="t.id" />
+          </el-select>
         </el-form-item>
-        <el-form-item label="归属地备注">
-          <el-input v-model="importForm.location" placeholder="如：深圳机房" />
+        <el-form-item label="归属地">
+          <el-input v-model="importLocation" placeholder="如：华东住宅" />
+        </el-form-item>
+        <el-form-item label="IP列表">
+          <el-input v-model="importList" type="textarea" :rows="6" placeholder="每行 IP:端口" />
         </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="importVisible = false">取消</el-button>
-        <el-button type="primary" :loading="importing" @click="handleImport">执行导入并检测</el-button>
+        <el-button type="primary" :loading="importing" @click="submitImport">导入</el-button>
       </template>
     </el-dialog>
+
+    <el-drawer v-model="logVisible" title="IP 访问日志" size="420px">
+      <el-timeline>
+        <el-timeline-item v-for="log in logs" :key="log.id" :timestamp="log.time" placement="top">
+          {{ log.action }} / {{ log.result }} — {{ log.detail }}
+        </el-timeline-item>
+      </el-timeline>
+    </el-drawer>
   </div>
 </template>
 
 <script setup>
-/**
- * 代理IP管理
- * - useListQuery + proxyIpApi.list
- * - 导入/检测/移除
- */
-import { ref, reactive, onMounted } from 'vue'
-import { Plus } from '@element-plus/icons-vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { proxyIpApi } from '@/api'
-import { useListQuery } from '@/composables/useListQuery'
+import { proxyIpApi, tenantApi, premiumApi } from '@/api'
+import { getCurrentRole, getCurrentUser } from '@/utils/auth'
+import { formatPlatforms } from '@/utils/platform'
 
-const {
-  loading,
-  list,
-  total,
-  page,
-  size,
-  fetchList,
-  handlePageChange,
-  handleSizeChange
-} = useListQuery(proxyIpApi.list)
+const isAdmin = computed(() => getCurrentRole() === 'super_admin')
+const activeTab = ref('pool')
+const loading = ref(false)
+const list = ref([])
+const total = ref(0)
+const page = ref(1)
+const size = ref(10)
+const checkingId = ref(null)
+const quota = ref(null)
+const dedicatedOn = ref(false)
+const rotateOn = ref(false)
 
 const importVisible = ref(false)
+const importPool = ref('public')
+const importList = ref('')
+const importLocation = ref('平台住宅池')
+const importTenantId = ref(null)
 const importing = ref(false)
-const checkingId = ref(null)
+const tenants = ref([])
 
-const importForm = reactive({
-  list: '',
-  location: ''
-})
+const logVisible = ref(false)
+const logs = ref([])
 
-/** 检测代理连通性 */
+const fetchList = async () => {
+  loading.value = true
+  try {
+    if (isAdmin.value) {
+      const data = await proxyIpApi.list({ page: page.value, size: size.value })
+      list.value = data?.list || []
+      total.value = data?.total || 0
+    } else {
+      await loadAllocated()
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+const loadAllocated = async () => {
+  const uid = getCurrentUser()
+  const data = await proxyIpApi.allocated({ tenantId: uid?.tenantId })
+  list.value = data?.list || []
+  total.value = list.value.length
+  quota.value = data?.quota || null
+  dedicatedOn.value = !!uid?.dedicatedIpPoolEnabled
+  rotateOn.value = !!uid?.ipRotateEnabled
+}
+
+const openImport = async (pool) => {
+  importPool.value = pool
+  importVisible.value = true
+  if (pool === 'dedicated' && !tenants.value.length) {
+    const data = await tenantApi.list({ page: 1, size: 100 })
+    tenants.value = data?.list || []
+  }
+}
+
+const submitImport = async () => {
+  importing.value = true
+  try {
+    await proxyIpApi.import({
+      list: importList.value,
+      location: importLocation.value,
+      poolType: importPool.value,
+      tenantId: importPool.value === 'dedicated' ? importTenantId.value : undefined
+    })
+    ElMessage.success('导入成功')
+    importVisible.value = false
+    importList.value = ''
+    await fetchList()
+  } finally {
+    importing.value = false
+  }
+}
+
 const handleCheck = async (row) => {
   checkingId.value = row.id
   try {
-    const result = await proxyIpApi.check(row.id)
-    ElMessage.success(result?.message || `${row.address} 检测完成`)
+    await proxyIpApi.check(row.id)
+    ElMessage.success('检测完成')
     await fetchList()
-  } catch {
-    // 错误已在拦截器提示
   } finally {
     checkingId.value = null
   }
 }
 
-/** 移除代理 */
-const handleRemove = (row) => {
-  ElMessageBox.confirm(`确认移除代理 ${row.address} ？`, '提示', {
-    type: 'warning',
-    confirmButtonText: '移除',
-    cancelButtonText: '取消'
-  })
-    .then(async () => {
-      try {
-        await proxyIpApi.remove(row.id)
-        ElMessage.success('已移除')
-        await fetchList()
-      } catch {
-        // 错误已在拦截器提示
-      }
-    })
-    .catch(() => {})
+const handleRemove = async (row) => {
+  await ElMessageBox.confirm(`确认移除 ${row.address}？`, '提示')
+  await proxyIpApi.remove(row.id)
+  ElMessage.success('已移除')
+  await fetchList()
 }
 
-/** 批量导入 */
-const handleImport = async () => {
-  if (!importForm.list.trim()) {
-    ElMessage.warning('请输入IP列表')
-    return
-  }
-  importing.value = true
+const openLogs = async (row) => {
+  logVisible.value = true
+  const data = await proxyIpApi.accessLogs(row.id)
+  logs.value = data?.list || []
+}
+
+const saveFlags = async () => {
   try {
-    const result = await proxyIpApi.import({
-      list: importForm.list,
-      location: importForm.location
+    await premiumApi.updateIpFlags({
+      dedicatedIpPoolEnabled: dedicatedOn.value,
+      ipRotateEnabled: rotateOn.value
     })
-    ElMessage.success(`成功导入 ${result?.count || 0} 条代理并完成检测`)
-    importVisible.value = false
-    importForm.list = ''
-    importForm.location = ''
-    await fetchList()
+    ElMessage.success('IP 池策略已更新')
   } catch {
-    // 错误已在拦截器提示
-  } finally {
-    importing.value = false
+    /* interceptor */
   }
 }
 
@@ -177,71 +241,11 @@ onMounted(fetchList)
 </script>
 
 <style scoped>
-.table-card {
-  border-radius: 4px;
-}
-.toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-.page-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #303133;
-  margin: 0;
-}
-.mono {
-  font-family: 'SF Mono', Monaco, Menlo, Consolas, monospace;
-  font-size: 13px;
-  color: #606266;
-}
-.status-dot {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-}
-.status-dot .dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  display: inline-block;
-}
-.status-dot.running {
-  color: #67c23a;
-}
-.status-dot.running .dot {
-  background: #67c23a;
-}
-.status-dot.idle {
-  color: #909399;
-}
-.status-dot.idle .dot {
-  background: #909399;
-}
-.status-dot.error {
-  color: #f56c6c;
-}
-.status-dot.error .dot {
-  background: #f56c6c;
-}
-.form-tip {
-  font-size: 12px;
-  color: #c0c4cc;
-  margin-top: 4px;
-}
-.pagination-wrap {
-  margin-top: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-.total-tip {
-  font-size: 13px;
-  color: #909399;
-}
+.toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 12px; flex-wrap: wrap; }
+.toolbar-left { display: flex; align-items: center; gap: 8px; }
+.hint { color: #909399; font-size: 13px; }
+.mono { font-family: Menlo, Monaco, Consolas, monospace; font-size: 12px; }
+.pagination-wrap { margin-top: 16px; display: flex; justify-content: space-between; align-items: center; }
+.total-tip { color: #909399; font-size: 13px; }
+.page-title { margin: 0 0 12px; font-size: 16px; }
 </style>

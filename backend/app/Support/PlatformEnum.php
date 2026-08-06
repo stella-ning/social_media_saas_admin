@@ -50,4 +50,24 @@ class PlatformEnum
             default => throw new \InvalidArgumentException('未知平台'),
         };
     }
+
+    /** 任意 key/中文/数字 → 中文展示名 */
+    public static function labelFromAny(mixed $platform): string
+    {
+        if ($platform === null || $platform === '') {
+            return '未知平台';
+        }
+        if (is_numeric($platform)) {
+            return self::toLabel((int) $platform);
+        }
+        $key = strtolower(trim((string) $platform));
+        return match ($key) {
+            'xiaohongshu', 'xhs', '小红书' => '小红书',
+            'douyin', '抖音' => '抖音',
+            'channels', '视频号', 'wechat_channels' => '视频号',
+            default => in_array((string) $platform, self::MAP, true)
+                ? (string) $platform
+                : (string) $platform,
+        };
+    }
 }

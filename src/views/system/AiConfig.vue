@@ -317,6 +317,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { Upload, Plus, Document, MoreFilled, MagicStick, UploadFilled } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { aiConfigApi, tenantApi } from '@/api'
+import { getCurrentRole, getCurrentUser } from '@/utils/auth'
 
 const route = useRoute()
 const router = useRouter()
@@ -378,6 +379,12 @@ const tenantParams = () => {
 }
 
 const loadTenants = async () => {
+  if (getCurrentRole() !== 'super_admin') {
+    showTenantFilter.value = false
+    const user = getCurrentUser()
+    currentTenantId.value = user?.tenantId || ''
+    return
+  }
   try {
     const data = await tenantApi.list({ page: 1, size: 100 })
     tenantOptions.value = data?.list || []

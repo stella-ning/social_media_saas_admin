@@ -110,10 +110,18 @@
         </el-form-item>
         <el-form-item label="选择平台" prop="platform">
           <el-radio-group v-model="bindForm.platform">
-            <el-radio-button value="小红书">小红书</el-radio-button>
-            <el-radio-button value="抖音">抖音</el-radio-button>
-            <el-radio-button value="视频号">视频号</el-radio-button>
+            <el-radio-button
+              v-for="p in bindPlatformOptions"
+              :key="p.code"
+              :value="p.label"
+              :disabled="p.disabled"
+            >
+              {{ p.label }}
+            </el-radio-button>
           </el-radio-group>
+          <div v-if="bindPlatformOptions.some((p) => p.disabled)" class="form-tip">
+            灰色平台为当前套餐未开通，请升级套餐后绑定
+          </div>
         </el-form-item>
         <el-form-item label="登录账号" prop="accountName">
           <el-input
@@ -144,7 +152,7 @@
         <el-form-item label="分配代理IP" prop="proxyIpId">
           <el-select
             v-model="bindForm.proxyIpId"
-            placeholder="仅显示当前租户空闲代理"
+            placeholder="从平台已分配公共池中选择"
             style="width: 100%"
             :loading="proxyLoading"
             filterable
@@ -156,7 +164,7 @@
               :value="p.id"
             />
           </el-select>
-          <div class="form-tip">一号一IP：选中后该代理不可再绑其他账号</div>
+          <div class="form-tip">平台托管公共池：一号一IP，选中后该 IP 不可再绑其他账号；任务也可启动时自动分配</div>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -200,9 +208,10 @@
 import { ref, reactive, onMounted, watch, computed } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { socialAccountApi, tenantApi } from '@/api'
+import { socialAccountApi, tenantApi, proxyIpApi } from '@/api'
 import { useListQuery } from '@/composables/useListQuery'
-import { getCurrentUser } from '@/utils/auth'
+import { getCurrentUser, getCurrentRole } from '@/utils/auth'
+import { platformOptionsFromAllow } from '@/utils/platform'
 import AccountAiConfigDialog from '@/components/AccountAiConfigDialog.vue'
 
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
@@ -228,12 +237,13 @@ const {
   { tenantId: '', keyword: '' }
 )
 
-const showTenantFilter = ref(true)
+const showTenantFilter = ref(getCurrentRole() === 'super_admin')
 const tenantOptions = ref([])
 const freeProxyOptions = ref([])
 const proxyLoading = ref(false)
 const refreshing = ref(false)
 const binding = ref(false)
+const bindPlatformOptions = ref(platformOptionsFromAllow([]))
 
 const bindVisible = ref(false)
 const bindFormRef = ref(null)
@@ -259,9 +269,17 @@ const bindRules = computed(() => {
   return rules
 })
 
-/** 加载租户下拉（超管）；租户管理员隐藏并自动带本租户 */
+/** 加载租户下拉（仅超管）；租户/业务员不请求 tenants 接口，避免无权限提示 */
 const loadTenantOptions = async () => {
   const user = getCurrentUser()
+  if (getCurrentRole() !== 'super_admin') {
+    showTenantFilter.value = false
+    tenantOptions.value = []
+    if (user?.tenantId) {
+      bindForm.tenantId = user.tenantId
+    }
+    return
+  }
   try {
     const data = await tenantApi.list({ page: 1, size: 100 })
     tenantOptions.value = (data?.list || []).map((t) => ({ id: t.id, name: t.name }))
@@ -269,21 +287,31 @@ const loadTenantOptions = async () => {
   } catch {
     showTenantFilter.value = false
     tenantOptions.value = []
-    if (user?.tenantId) {
-      bindForm.tenantId = user.tenantId
-    }
   }
 }
 
-/** 按租户加载空闲可用代理 IP */
+/** 按租户加载空闲可用代理 IP + 套餐平台白名单 */
 const loadFreeProxies = async (tenantId) => {
   freeProxyOptions.value = []
   bindForm.proxyIpId = ''
-  if (!tenantId) return
+  if (!tenantId) {
+    bindPlatformOptions.value = platformOptionsFromAllow([])
+    return
+  }
   proxyLoading.value = true
   try {
-    const data = await socialAccountApi.freeProxyIps(tenantId)
-    freeProxyOptions.value = data?.list || []
+    const [proxyData, quota] = await Promise.all([
+      socialAccountApi.freeProxyIps(tenantId),
+      // 走 proxy-ips 权限（租户可访问），勿调仅超管的 package-setting
+      proxyIpApi.tenantQuota(tenantId).catch(() => null)
+    ])
+    freeProxyOptions.value = proxyData?.list || []
+    const allow = quota?.allowPlatforms || []
+    bindPlatformOptions.value = platformOptionsFromAllow(allow)
+    const enabled = bindPlatformOptions.value.filter((p) => !p.disabled)
+    if (enabled.length && enabled.every((p) => p.label !== bindForm.platform)) {
+      bindForm.platform = enabled[0].label
+    }
   } catch {
     freeProxyOptions.value = []
   } finally {

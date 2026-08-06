@@ -17,10 +17,12 @@ return [
         'super_admin' => [
             'dashboard', 'social-accounts', 'crawler-tasks', 'proxy-ips',
             'tenants', 'package-setting', 'ai-config', 'crm-leads', 'messages', 'settings', 'users',
+            'finance', 'premium',
         ],
         'tenant_admin' => [
-            'dashboard', 'social-accounts', 'crawler-tasks',
+            'dashboard', 'social-accounts', 'crawler-tasks', 'proxy-ips',
             'ai-config', 'crm-leads', 'messages',
+            'finance', 'premium',
         ],
         'operator' => [
             'dashboard', 'crm-leads', 'messages',

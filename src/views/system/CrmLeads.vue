@@ -199,6 +199,7 @@ import { useRouter } from 'vue-router'
 import { Search, Download } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { crmLeadApi, tenantApi } from '@/api'
+import { getCurrentRole } from '@/utils/auth'
 import { useListQuery } from '@/composables/useListQuery'
 
 const router = useRouter()
@@ -229,8 +230,12 @@ const {
 const tenantOptions = ref([])
 const exportLoading = ref(false)
 
-/** 加载租户选项（403 则忽略，不展示筛选） */
+/** 加载租户选项（仅超管；租户/业务员不请求 /tenants） */
 const loadTenants = async () => {
+  if (getCurrentRole() !== 'super_admin') {
+    tenantOptions.value = []
+    return
+  }
   try {
     const data = await tenantApi.list({ page: 1, size: 100 })
     tenantOptions.value = data?.list || []

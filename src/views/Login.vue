@@ -259,8 +259,8 @@ const persistRememberUsername = (username) => {
 const redirectAfterLogin = (user) => {
   const role = user.role
   const redirect = router.currentRoute.value.query.redirect
-  let target = getDefaultHome(role)
-  if (typeof redirect === 'string' && redirect.startsWith('/') && hasPermission(redirect, role)) {
+  let target = getDefaultHome(role, user)
+  if (typeof redirect === 'string' && redirect.startsWith('/') && hasPermission(redirect, role, user)) {
     target = redirect
   }
   router.push(target)

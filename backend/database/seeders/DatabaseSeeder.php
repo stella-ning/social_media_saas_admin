@@ -259,5 +259,10 @@ class DatabaseSeeder extends Seeder
             'key' => 'system_name',
             'value' => ['v' => '社媒AI自动化SaaS平台'],
         ]);
+
+        // 补齐完整业务链路（Cookie / 账号AI / 爬虫绑定 / 线索 / 配额）
+        $this->call(BusinessFlowDemoSeeder::class);
+        $this->call(MessageModuleDemoSeeder::class);
+        $this->call(PackagePlatformProxySeeder::class);
     }
 }

@@ -9,8 +9,9 @@
         <span v-show="!isCollapse" class="logo-text">SocialAI SaaS</span>
       </div>
 
-      <!-- 菜单：按角色权限过滤 -->
+      <!-- 菜单：按业务分组；角色 ∩ 套餐，可见即可得 -->
       <el-menu
+        :key="menuScopeKey"
         :default-active="activeMenu"
         :collapse="isCollapse"
         :collapse-transition="false"
@@ -20,13 +21,13 @@
         router
         class="sidebar-menu"
       >
-        <!-- 1. 首页仪表盘 -->
+        <!-- 1. 首页 -->
         <el-menu-item v-if="canAccess('/dashboard')" index="/dashboard">
           <el-icon><Odometer /></el-icon>
           <span>首页仪表盘</span>
         </el-menu-item>
 
-        <!-- 2. 资源管理 -->
+        <!-- 2. 资源管理：采集账号 / 任务 / IP -->
         <el-sub-menu v-if="showResourceMenu" index="resource">
           <template #title>
             <el-icon><FolderOpened /></el-icon>
@@ -38,16 +39,73 @@
           <el-menu-item v-if="canAccess('/resource/crawler-tasks')" index="/resource/crawler-tasks">
             爬虫任务管理
           </el-menu-item>
+          <el-menu-item v-if="canAccess('/resource/comment-funnel')" index="/resource/comment-funnel">
+            评论引流日志
+          </el-menu-item>
+          <el-menu-item v-if="canAccess('/system/crawler-behavior')" index="/system/crawler-behavior">
+            爬虫真人行为
+          </el-menu-item>
+          <el-menu-item v-if="canAccess('/system/sensitive-words')" index="/system/sensitive-words">
+            敏感词管理
+          </el-menu-item>
           <el-menu-item v-if="canAccess('/resource/proxy-ip')" index="/resource/proxy-ip">
             代理IP管理
           </el-menu-item>
+          <el-menu-item v-if="canAccess('/resource/ip-risk')" index="/resource/ip-risk">
+            IP风险检测
+          </el-menu-item>
         </el-sub-menu>
 
-        <!-- 3. 系统管理 -->
-        <el-sub-menu v-if="showSystemMenu" index="system">
+        <!-- 3. 客户运营：会话 / 线索 / 提醒 -->
+        <el-sub-menu v-if="showCustomerMenu" index="customer">
           <template #title>
-            <el-icon><Setting /></el-icon>
-            <span>系统管理</span>
+            <el-icon><ChatDotRound /></el-icon>
+            <span>客户运营</span>
+          </template>
+          <el-menu-item v-if="canAccess('/system/messages')" index="/system/messages">
+            消息会话管理
+          </el-menu-item>
+          <el-menu-item v-if="canAccess('/system/crm-leads')" index="/system/crm-leads">
+            CRM客户线索
+          </el-menu-item>
+          <el-menu-item v-if="canAccess('/system/crm-reminders')" index="/system/crm-reminders">
+            CRM跟进提醒
+          </el-menu-item>
+        </el-sub-menu>
+
+        <!-- 4. AI 智能 -->
+        <el-sub-menu v-if="showAiMenu" index="ai">
+          <template #title>
+            <el-icon><MagicStick /></el-icon>
+            <span>AI智能</span>
+          </template>
+          <el-menu-item v-if="canAccess('/system/ai-config')" index="/system/ai-config">
+            AI配置中心
+          </el-menu-item>
+          <el-menu-item v-if="canAccess('/system/industry-prompts')" index="/system/industry-prompts">
+            行业Prompt商城
+          </el-menu-item>
+        </el-sub-menu>
+
+        <!-- 5. 套餐中心（租户侧） -->
+        <el-sub-menu v-if="showPackageMenu" index="package">
+          <template #title>
+            <el-icon><Goods /></el-icon>
+            <span>套餐中心</span>
+          </template>
+          <el-menu-item v-if="canAccess('/system/package-purchase')" index="/system/package-purchase">
+            套餐购买
+          </el-menu-item>
+          <el-menu-item v-if="canAccess('/system/sub-accounts')" index="/system/sub-accounts">
+            子账号管理
+          </el-menu-item>
+        </el-sub-menu>
+
+        <!-- 6. 平台运营（超管） -->
+        <el-sub-menu v-if="showPlatformMenu" index="platform">
+          <template #title>
+            <el-icon><OfficeBuilding /></el-icon>
+            <span>平台运营</span>
           </template>
           <el-menu-item v-if="canAccess('/system/tenants')" index="/system/tenants">
             租户管理
@@ -55,19 +113,16 @@
           <el-menu-item v-if="canAccess('/system/package-settings')" index="/system/package-settings">
             套餐权限管理
           </el-menu-item>
-          <el-menu-item v-if="canAccess('/system/ai-config')" index="/system/ai-config">
-            AI配置中心
-          </el-menu-item>
-          <el-menu-item v-if="canAccess('/system/crm-leads')" index="/system/crm-leads">
-            CRM客户线索
-          </el-menu-item>
-          <el-menu-item v-if="canAccess('/system/messages')" index="/system/messages">
-            消息会话管理
-          </el-menu-item>
-          <el-menu-item v-if="canAccess('/system/settings')" index="/system/settings">
-            系统设置
+          <el-menu-item v-if="canAccess('/system/finance')" index="/system/finance">
+            财务报表
           </el-menu-item>
         </el-sub-menu>
+
+        <!-- 7. 系统设置（超管） -->
+        <el-menu-item v-if="canAccess('/system/settings')" index="/system/settings">
+          <el-icon><Setting /></el-icon>
+          <span>系统设置</span>
+        </el-menu-item>
       </el-menu>
 
       <!-- 底部版本号 -->
@@ -96,13 +151,14 @@
         </div>
 
         <div class="header-right">
-          <!-- 角色切换：需输入目标账号密码后确认 -->
-          <div class="role-switch">
-            <span class="role-label">切换角色:</span>
+          <!-- 角色切换：仅超级管理员可用（演示多角色） -->
+          <div v-if="isSuperAdmin" class="role-switch">
+            <span class="role-label">切换账号:</span>
             <el-select
               :model-value="currentRole"
               size="small"
               style="width: 140px"
+              placeholder="选择角色类型"
               @change="onRoleSelect"
             >
               <el-option label="超级管理员" value="super_admin" />
@@ -152,17 +208,20 @@
         </div>
       </el-header>
 
-      <!-- 内容滚动区 -->
+      <!-- 内容滚动区：无权限不渲染页面（可见即可得） -->
       <el-main class="layout-content">
-        <router-view :key="viewKey" />
+        <router-view v-if="pageAllowed" :key="`${viewKey}-${menuScopeKey}`" />
+        <div v-else class="no-permission-placeholder">
+          <el-empty description="当前账号无权访问该页面" />
+        </div>
       </el-main>
     </el-container>
 
-    <!-- 切换角色密码确认弹窗 -->
+    <!-- 切换账号：支持输入任意用户名 + 密码 -->
     <el-dialog
       v-model="switchVisible"
-      title="切换角色验证"
-      width="420px"
+      title="切换账号"
+      width="440px"
       :close-on-click-modal="false"
       destroy-on-close
       @closed="onSwitchDialogClosed"
@@ -172,21 +231,27 @@
         :closable="false"
         show-icon
         class="switch-alert"
-        :title="`即将切换为「${pendingAccount?.roleLabel || ''}」，请输入账号密码确认`"
+        :title="switchHint"
       />
       <el-form
         ref="switchFormRef"
         :model="switchForm"
         :rules="switchRules"
-        label-width="80px"
+        label-width="88px"
         class="switch-form"
         @submit.prevent="confirmSwitchRole"
       >
-        <el-form-item label="目标账号">
-          <el-input :model-value="pendingAccount?.username" disabled />
+        <el-form-item label="目标角色">
+          <el-tag effect="plain">{{ pendingRoleLabel }}</el-tag>
         </el-form-item>
-        <el-form-item label="显示名称">
-          <el-input :model-value="pendingAccount?.displayName" disabled />
+        <el-form-item label="用户名" prop="username">
+          <el-input
+            ref="usernameInputRef"
+            v-model="switchForm.username"
+            clearable
+            placeholder="请输入要切换的用户名"
+            @keyup.enter="focusPassword"
+          />
         </el-form-item>
         <el-form-item label="登录密码" prop="password">
           <el-input
@@ -216,7 +281,7 @@
  * - 切换角色需调登录 API 验证目标账号密码
  * - 无权限页面自动跳回角色默认首页
  */
-import { ref, reactive, computed, watch, nextTick, onMounted } from 'vue'
+import { ref, reactive, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { authApi } from '@/api'
@@ -228,9 +293,9 @@ import {
   updateCurrentUser,
   clearLoginSession,
   hasPermission,
-  canSeeResourceMenu,
-  canSeeSystemMenu,
-  getDefaultHome
+  canSeeMenuGroup,
+  getDefaultHome,
+  getVisibleMenus
 } from '@/utils/auth'
 
 const route = useRoute()
@@ -242,23 +307,67 @@ const viewKey = ref(0)
 /** 当前角色与用户信息（来自 localStorage，/auth/me 可刷新） */
 const currentRole = ref(getCurrentRole())
 const currentUser = ref(getCurrentUser())
+const isSuperAdmin = computed(() => currentRole.value === 'super_admin')
 
 const activeMenu = computed(() => route.path)
-const showResourceMenu = computed(() => canSeeResourceMenu(currentRole.value))
-const showSystemMenu = computed(() => canSeeSystemMenu(currentRole.value))
-const canAccess = (path) => hasPermission(path, currentRole.value)
+/** 菜单作用域：角色 + 套餐变化时重建侧栏，避免残留无权限项 */
+const menuScopeKey = computed(
+  () => `${currentRole.value}:${currentUser.value?.package || 'basic'}:${currentUser.value?.id || 0}`
+)
+const showResourceMenu = computed(() =>
+  canSeeMenuGroup('resource', currentRole.value, currentUser.value)
+)
+const showCustomerMenu = computed(() =>
+  canSeeMenuGroup('customer', currentRole.value, currentUser.value)
+)
+const showAiMenu = computed(() =>
+  canSeeMenuGroup('ai', currentRole.value, currentUser.value)
+)
+const showPackageMenu = computed(() =>
+  canSeeMenuGroup('package', currentRole.value, currentUser.value)
+)
+const showPlatformMenu = computed(() =>
+  canSeeMenuGroup('platform', currentRole.value, currentUser.value)
+)
+/** 用 Set 保证模板对权限列表的响应式依赖稳定 */
+const allowedPathSet = computed(
+  () => new Set(getVisibleMenus(currentRole.value, currentUser.value))
+)
+const canAccess = (path) => allowedPathSet.value.has(path)
+/** 当前路由是否允许渲染（切换角色瞬间也能挡住无权限页） */
+const pageAllowed = computed(() => {
+  if (route.path === '/' || !route.path) return true
+  return allowedPathSet.value.has(route.path)
+})
 
-/** 切换角色密码弹窗 */
+/** 切换账号弹窗 */
 const switchVisible = ref(false)
 const switchLoading = ref(false)
 const pendingRole = ref('')
-const pendingAccount = ref(null)
 const switchFormRef = ref(null)
+const usernameInputRef = ref(null)
 const passwordInputRef = ref(null)
-const switchForm = reactive({ password: '' })
+const switchForm = reactive({ username: '', password: '' })
 const switchRules = {
+  username: [{ required: true, message: '请输入目标用户名', trigger: 'blur' }],
   password: [{ required: true, message: '请输入登录密码', trigger: 'blur' }]
 }
+
+const ROLE_LABELS = {
+  super_admin: '超级管理员',
+  tenant_admin: '租户管理员',
+  operator: '业务员'
+}
+
+const pendingRoleLabel = computed(
+  () => ROLE_LABELS[pendingRole.value] || pendingRole.value || '目标账号'
+)
+
+const switchHint = computed(() => {
+  const preset = ROLE_ACCOUNTS[pendingRole.value]?.username
+  const tip = preset ? `可改用户名，演示账号可填 ${preset}` : '请输入目标用户名与密码'
+  return `切换为「${pendingRoleLabel.value}」：${tip}`
+})
 
 /** 从 localStorage 同步角色与用户信息到响应式状态 */
 const syncUser = () => {
@@ -267,17 +376,20 @@ const syncUser = () => {
 }
 
 /**
- * 选择角色：不立刻切换，弹出密码验证
- * 下拉框使用 :model-value 绑定，取消时保持原角色
+ * 选择角色：弹出账号切换（用户名可编辑，预填演示账号）
  */
 const onRoleSelect = (role) => {
-  if (role === currentRole.value) return
+  if (!isSuperAdmin.value) {
+    ElMessage.warning('仅超级管理员可切换角色')
+    return
+  }
   pendingRole.value = role
-  pendingAccount.value = ROLE_ACCOUNTS[role]
+  const preset = ROLE_ACCOUNTS[role]
+  switchForm.username = preset?.username || ''
   switchForm.password = ''
   switchVisible.value = true
   nextTick(() => {
-    passwordInputRef.value?.focus?.()
+    usernameInputRef.value?.focus?.()
   })
 }
 
@@ -285,19 +397,23 @@ const onRoleSelect = (role) => {
 const cancelSwitchRole = () => {
   switchVisible.value = false
   pendingRole.value = ''
-  pendingAccount.value = null
+  switchForm.username = ''
   switchForm.password = ''
 }
 
 const onSwitchDialogClosed = () => {
+  switchForm.username = ''
   switchForm.password = ''
   pendingRole.value = ''
-  pendingAccount.value = null
 }
 
-/** 调登录 API 验证密码后切换角色 */
+const focusPassword = () => {
+  passwordInputRef.value?.focus?.()
+}
+
+/** 用输入的用户名 + 密码登录切换 */
 const confirmSwitchRole = async () => {
-  if (!switchFormRef.value || !pendingRole.value || !pendingAccount.value) return
+  if (!switchFormRef.value || !pendingRole.value) return
   try {
     await switchFormRef.value.validate()
   } catch {
@@ -306,18 +422,27 @@ const confirmSwitchRole = async () => {
 
   switchLoading.value = true
   try {
-    const username = pendingAccount.value.username
-    const data = await authApi.login({ username, password: switchForm.password })
+    const username = switchForm.username.trim()
+    const data = await authApi.switchRole({
+      username,
+      password: switchForm.password,
+      role: pendingRole.value || undefined
+    })
+    if (data.roleMatched === false) {
+      ElMessage.warning(
+        `账号 ${username} 实际角色为「${data.user.roleLabel}」，与所选「${pendingRoleLabel.value}」不一致，已按实际角色进入`
+      )
+    }
     setLoginSession({ token: data.token, user: data.user })
     syncUser()
     switchVisible.value = false
+    switchForm.username = ''
     switchForm.password = ''
     ElMessage.success(`已切换为 ${data.user.roleLabel}（账号：${data.user.username}）`)
 
     const role = data.user.role
-    if (!hasPermission(route.path, role)) {
-      await router.replace(getDefaultHome(role))
-    }
+    const user = data.user
+    await router.replace(getDefaultHome(role, user))
     viewKey.value++
   } catch {
     // 错误提示由 request 拦截器统一处理
@@ -356,8 +481,13 @@ const onUserCommand = (cmd) => {
   }
 }
 
-/** 进入布局时尝试刷新用户信息 */
+/** 进入布局时尝试刷新用户信息；会话变更时同步菜单权限 */
+const onAuthUserUpdated = () => {
+  syncUser()
+}
+
 onMounted(async () => {
+  window.addEventListener('auth-user-updated', onAuthUserUpdated)
   try {
     const user = await authApi.me()
     if (user) {
@@ -367,6 +497,10 @@ onMounted(async () => {
   } catch {
     // Token 失效等情况由拦截器处理，此处静默忽略
   }
+})
+
+onUnmounted(() => {
+  window.removeEventListener('auth-user-updated', onAuthUserUpdated)
 })
 
 syncUser()
@@ -414,7 +548,17 @@ watch(
 .sidebar-menu {
   border-right: none;
   flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
+}
+
+/* 系统管理子菜单项较多时保证可滚动可见 */
+.sidebar-menu :deep(.el-menu) {
+  background-color: #1f2d3d !important;
+}
+.sidebar-menu :deep(.el-sub-menu .el-menu-item) {
+  min-width: 0;
 }
 
 .sidebar-menu:not(.el-menu--collapse) {
@@ -538,6 +682,13 @@ watch(
 .layout-content {
   padding: 20px;
   overflow-y: auto;
+}
+
+.no-permission-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 360px;
 }
 
 .switch-alert {

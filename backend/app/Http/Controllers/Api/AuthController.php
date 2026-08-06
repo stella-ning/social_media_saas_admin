@@ -42,14 +42,15 @@ class AuthController extends Controller
         return ApiResponse::success($this->authService->formatUser($user));
     }
 
-    /** POST /api/auth/switch-role 切换角色需密码 */
+    /** POST /api/auth/switch-role 超管按用户名切换账号 */
     public function switchRole(SwitchRoleRequest $request)
     {
         $data = $this->authService->switchRole(
             $request->user(),
-            $request->input('role'),
-            $request->input('password')
+            $request->input('username'),
+            $request->input('password'),
+            $request->input('role')
         );
-        return ApiResponse::success($data, '角色切换成功');
+        return ApiResponse::success($data, '账号切换成功');
     }
 }

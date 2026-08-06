@@ -15,6 +15,11 @@
       </el-tabs>
 
       <el-form v-if="form" label-width="200px" class="pkg-form">
+        <el-divider content-position="left">定价</el-divider>
+        <el-form-item label="月费（元）">
+          <el-input-number v-model="form.priceMonthly" :min="0" :max="999999" controls-position="right" />
+        </el-form-item>
+
         <el-divider content-position="left">AI 参数模板等级</el-divider>
         <el-form-item label="允许最高模板等级">
           <el-select v-model="form.maxTemplateLevel" style="width: 280px">
@@ -45,8 +50,21 @@
         <el-form-item label="社媒账号绑定上限">
           <el-input-number v-model="form.maxSocialAccount" :min="-1" :max="999999" controls-position="right" />
         </el-form-item>
+        <el-form-item label="公共池可分配IP数">
+          <el-input-number v-model="form.maxProxyIp" :min="-1" :max="999999" controls-position="right" />
+        </el-form-item>
+        <el-form-item label="每日公共IP请求上限">
+          <el-input-number v-model="form.dailyProxyRequestLimit" :min="-1" :max="9999999" controls-position="right" />
+          <div class="tip">达限后系统自动暂停该套餐租户的运行中爬虫任务</div>
+        </el-form-item>
 
-        <el-divider content-position="left">平台与功能开关</el-divider>
+        <el-divider content-position="left">平台与增值开关</el-divider>
+        <el-alert
+          type="warning"
+          :closable="false"
+          title="IP 托管：全部套餐强制使用平台公共住宅代理池，已全局关闭租户自有代理上传"
+          style="margin-bottom: 12px"
+        />
         <el-form-item label="可绑定平台">
           <el-checkbox-group v-model="form.allowPlatforms">
             <el-checkbox label="xiaohongshu">小红书</el-checkbox>
@@ -56,13 +74,36 @@
         </el-form-item>
         <el-form-item label="小红书独立 AI 配置">
           <el-switch v-model="form.enableAccountAiConfig" />
-          <span class="switch-tip">关闭后账号强制继承租户 AI 模板</span>
         </el-form-item>
         <el-form-item label="账号专属知识库">
           <el-switch v-model="form.enableAccountKnowledge" />
         </el-form-item>
         <el-form-item label="自定义 API-Key">
           <el-switch v-model="form.enableCustomApiKey" />
+        </el-form-item>
+        <el-form-item label="子账号管理">
+          <el-switch v-model="form.enableSubAccount" />
+        </el-form-item>
+        <el-form-item label="爬虫真人行为">
+          <el-switch v-model="form.enableHumanBehavior" />
+        </el-form-item>
+        <el-form-item label="CRM自动提醒">
+          <el-switch v-model="form.enableCrmAutoRemind" />
+        </el-form-item>
+        <el-form-item label="Excel导出">
+          <el-switch v-model="form.enableExcelExport" />
+        </el-form-item>
+        <el-form-item label="专属隔离IP池">
+          <el-switch v-model="form.enableDedicatedIpPool" />
+        </el-form-item>
+        <el-form-item label="IP风险检测">
+          <el-switch v-model="form.enableIpRiskCheck" />
+        </el-form-item>
+        <el-form-item label="IP自动轮换">
+          <el-switch v-model="form.enableIpRotate" />
+        </el-form-item>
+        <el-form-item label="白标去标识">
+          <el-switch v-model="form.enableWhiteLabel" />
         </el-form-item>
         <el-form-item label="备注">
           <el-input v-model="form.remark" type="textarea" :rows="2" maxlength="255" show-word-limit />
@@ -102,16 +143,27 @@ const levelOptions = [
 
 const form = reactive({
   packageType: 1,
+  priceMonthly: 139,
   maxTemplateLevel: 1,
   maxPrompt: 3,
   maxKnowledge: 5,
   dailyAiLimit: 800,
   maxCrawlerTask: 5,
   maxSocialAccount: 3,
+  maxProxyIp: 3,
+  dailyProxyRequestLimit: 3000,
   allowPlatforms: ['xiaohongshu'],
   enableAccountAiConfig: false,
   enableAccountKnowledge: false,
   enableCustomApiKey: false,
+  enableSubAccount: false,
+  enableHumanBehavior: false,
+  enableCrmAutoRemind: false,
+  enableExcelExport: false,
+  enableDedicatedIpPool: false,
+  enableIpRiskCheck: false,
+  enableIpRotate: false,
+  enableWhiteLabel: false,
   remark: ''
 })
 
@@ -120,16 +172,27 @@ const unlimitedDisplay = (v) => (v === null || v === undefined ? -1 : v)
 const fillForm = (item) => {
   if (!item) return
   form.packageType = item.packageType
+  form.priceMonthly = item.priceMonthly ?? 0
   form.maxTemplateLevel = item.maxTemplateLevel
   form.maxPrompt = unlimitedDisplay(item.maxPrompt)
   form.maxKnowledge = unlimitedDisplay(item.maxKnowledge)
   form.dailyAiLimit = unlimitedDisplay(item.dailyAiLimit)
   form.maxCrawlerTask = unlimitedDisplay(item.maxCrawlerTask)
   form.maxSocialAccount = unlimitedDisplay(item.maxSocialAccount)
+  form.maxProxyIp = unlimitedDisplay(item.maxProxyIp)
+  form.dailyProxyRequestLimit = unlimitedDisplay(item.dailyProxyRequestLimit)
   form.allowPlatforms = [...(item.allowPlatforms || [])]
   form.enableAccountAiConfig = !!item.enableAccountAiConfig
   form.enableAccountKnowledge = !!item.enableAccountKnowledge
   form.enableCustomApiKey = !!item.enableCustomApiKey
+  form.enableSubAccount = !!item.enableSubAccount
+  form.enableHumanBehavior = !!item.enableHumanBehavior
+  form.enableCrmAutoRemind = !!item.enableCrmAutoRemind
+  form.enableExcelExport = !!item.enableExcelExport
+  form.enableDedicatedIpPool = !!item.enableDedicatedIpPool
+  form.enableIpRiskCheck = !!item.enableIpRiskCheck
+  form.enableIpRotate = !!item.enableIpRotate
+  form.enableWhiteLabel = !!item.enableWhiteLabel
   form.remark = item.remark || ''
 }
 
@@ -156,16 +219,28 @@ const onTabChange = (tab) => {
 
 const payloadFromForm = () => ({
   package_type: Number(activeTab.value),
+  price_monthly: form.priceMonthly,
   max_template_level: form.maxTemplateLevel,
   max_prompt: form.maxPrompt,
   max_knowledge: form.maxKnowledge,
   daily_ai_limit: form.dailyAiLimit,
   max_crawler_task: form.maxCrawlerTask,
   max_social_account: form.maxSocialAccount,
+  max_proxy_ip: form.maxProxyIp,
+  daily_proxy_request_limit: form.dailyProxyRequestLimit,
+  allow_self_proxy: false,
   allow_platforms: form.allowPlatforms,
   enable_account_ai_config: form.enableAccountAiConfig,
   enable_account_knowledge: form.enableAccountKnowledge,
   enable_custom_api_key: form.enableCustomApiKey,
+  enable_sub_account: form.enableSubAccount,
+  enable_human_behavior: form.enableHumanBehavior,
+  enable_crm_auto_remind: form.enableCrmAutoRemind,
+  enable_excel_export: form.enableExcelExport,
+  enable_dedicated_ip_pool: form.enableDedicatedIpPool,
+  enable_ip_risk_check: form.enableIpRiskCheck,
+  enable_ip_rotate: form.enableIpRotate,
+  enable_white_label: form.enableWhiteLabel,
   remark: form.remark
 })
 

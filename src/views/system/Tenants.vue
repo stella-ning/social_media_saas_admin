@@ -117,6 +117,9 @@
                 <p>AI调用：{{ row.aiQuota.toLocaleString() }} 次/月</p>
                 <p>账号上限：{{ row.binds }} 个</p>
                 <p>知识库：{{ row.kb }} GB</p>
+                <p>代理IP：{{ row.maxProxyIp == null ? '∞' : row.maxProxyIp }} 个</p>
+                <p>日请求：{{ row.dailyProxyRequestLimit == null ? '∞' : row.dailyProxyRequestLimit }} 次</p>
+                <p>IP托管：平台公共池</p>
               </el-popover>
               <el-button link type="primary" size="small" @click="openEditDialog(row)">编辑</el-button>
               <el-button link type="primary" size="small" @click="openAiDialog(row)">AI配置</el-button>
@@ -190,10 +193,10 @@
     />
 
     <!-- ========== 套餐配置弹窗 ========== -->
-    <el-dialog v-model="pkgVisible" :title="`套餐配置 [${pkgTarget?.name || ''}]`" width="520px" destroy-on-close>
-      <el-form label-width="120px">
+    <el-dialog v-model="pkgVisible" :title="`套餐配置 [${pkgTarget?.name || ''}]`" width="560px" destroy-on-close>
+      <el-form label-width="150px">
         <el-form-item label="当前套餐等级">
-          <el-select v-model="pkgForm.package" style="width: 100%">
+          <el-select v-model="pkgForm.package" style="width: 100%" @change="onPkgTypeChange">
             <el-option label="基础版" value="basic" />
             <el-option label="专业版" value="pro" />
             <el-option label="企业版" value="ent" />
@@ -210,6 +213,32 @@
         </el-form-item>
         <el-form-item label="知识库容量(GB)">
           <el-slider v-model="pkgForm.kb" :min="1" :max="100" show-input />
+        </el-form-item>
+
+        <el-divider content-position="left">代理 IP 配额</el-divider>
+        <el-form-item label="最大绑定代理IP">
+          <el-input-number
+            v-model="pkgForm.maxProxyIp"
+            :min="-1"
+            :max="999999"
+            controls-position="right"
+            style="width: 200px"
+          />
+          <span class="pkg-tip">-1 表示无上限</span>
+        </el-form-item>
+        <el-form-item label="每日IP请求上限">
+          <el-input-number
+            v-model="pkgForm.dailyProxyRequestLimit"
+            :min="-1"
+            :max="9999999"
+            controls-position="right"
+            style="width: 200px"
+          />
+          <span class="pkg-tip">达限自动暂停爬虫</span>
+        </el-form-item>
+        <el-form-item label="IP托管说明">
+          <el-tag type="success">平台公共住宅代理池</el-tag>
+          <span class="pkg-tip">已全局关闭租户自有代理上传，爬虫自动从公共池分配</span>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -230,8 +259,9 @@
 import { ref, reactive, onMounted } from 'vue'
 import { Search, Download, Plus, ArrowDown } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { tenantApi } from '@/api'
+import { tenantApi, packageSettingApi } from '@/api'
 import { useListQuery } from '@/composables/useListQuery'
+import { invalidateTenantScopeCache } from '@/composables/useTenantScope'
 import TenantAiConfigDialog from '@/components/TenantAiConfigDialog.vue'
 
 /** 顶部统计卡片配置 */
@@ -452,10 +482,93 @@ const onAiConfigSaved = async () => {
 /* ----- 套餐配置 ----- */
 const pkgVisible = ref(false)
 const pkgTarget = ref(null)
-const pkgForm = reactive({ package: 'basic', concurrent: 10, aiQuota: 5000, binds: 10, kb: 5 })
+const packageSettingMap = ref({})
+const pkgForm = reactive({
+  package: 'basic',
+  concurrent: 10,
+  aiQuota: 5000,
+  binds: 10,
+  kb: 5,
+  maxProxyIp: 3,
+  dailyProxyRequestLimit: 500,
+  allowSelfProxy: false
+})
 
-const openPackageDialog = (row) => {
+/** 各套餐默认配额（与后端 TenantService::packageDefaults 一致）；IP 优先读 saas_package_setting */
+const PKG_DEFAULTS = {
+  basic: {
+    concurrent: 5,
+    aiQuota: 800,
+    binds: 3,
+    kb: 1,
+    maxProxyIp: 3,
+    dailyProxyRequestLimit: 3000,
+    allowSelfProxy: false
+  },
+  pro: {
+    concurrent: 20,
+    aiQuota: 8000,
+    binds: 15,
+    kb: 10,
+    maxProxyIp: 15,
+    dailyProxyRequestLimit: 20000,
+    allowSelfProxy: false
+  },
+  ent: {
+    concurrent: 50,
+    aiQuota: 999999,
+    binds: 999,
+    kb: 50,
+    maxProxyIp: -1,
+    dailyProxyRequestLimit: -1,
+    allowSelfProxy: false
+  }
+}
+
+const unlimitedDisplay = (v) => (v === null || v === undefined ? -1 : v)
+
+const loadPackageSettings = async () => {
+  try {
+    const data = await packageSettingApi.list()
+    const map = {}
+    ;(data?.list || []).forEach((item) => {
+      map[item.packageCode] = item
+    })
+    packageSettingMap.value = map
+  } catch {
+    packageSettingMap.value = {}
+  }
+}
+
+/** 切换套餐等级：回填并发 / AI额度 / 账号 / 知识库 / 代理IP */
+const applyDefaultsFromPackage = (pkgCode) => {
+  const d = PKG_DEFAULTS[pkgCode] || PKG_DEFAULTS.basic
+  pkgForm.concurrent = d.concurrent
+  pkgForm.aiQuota = d.aiQuota
+  pkgForm.binds = d.binds
+  pkgForm.kb = d.kb
+
+  const s = packageSettingMap.value[pkgCode]
+  if (s) {
+    pkgForm.maxProxyIp = unlimitedDisplay(s.maxProxyIp)
+    pkgForm.dailyProxyRequestLimit = unlimitedDisplay(s.dailyProxyRequestLimit)
+    pkgForm.allowSelfProxy = !!s.allowSelfProxy
+  } else {
+    pkgForm.maxProxyIp = d.maxProxyIp
+    pkgForm.dailyProxyRequestLimit = d.dailyProxyRequestLimit
+    pkgForm.allowSelfProxy = d.allowSelfProxy
+  }
+}
+
+const onPkgTypeChange = (pkg) => {
+  applyDefaultsFromPackage(pkg)
+}
+
+const openPackageDialog = async (row) => {
   pkgTarget.value = row
+  if (!Object.keys(packageSettingMap.value).length) {
+    await loadPackageSettings()
+  }
   Object.assign(pkgForm, {
     package: row.package,
     concurrent: row.concurrent,
@@ -463,6 +576,18 @@ const openPackageDialog = (row) => {
     binds: row.binds,
     kb: row.kb
   })
+  // 有租户有效 IP 数据则用列表返回值，否则按套餐修正
+  if (row.maxProxyIp != null || row.dailyProxyRequestLimit != null || row.allowSelfProxy != null) {
+    pkgForm.maxProxyIp = unlimitedDisplay(row.maxProxyIp)
+    pkgForm.dailyProxyRequestLimit = unlimitedDisplay(row.dailyProxyRequestLimit)
+    pkgForm.allowSelfProxy = !!row.allowSelfProxy
+  } else {
+    const d = PKG_DEFAULTS[row.package] || PKG_DEFAULTS.basic
+    const s = packageSettingMap.value[row.package]
+    pkgForm.maxProxyIp = unlimitedDisplay(s?.maxProxyIp ?? d.maxProxyIp)
+    pkgForm.dailyProxyRequestLimit = unlimitedDisplay(s?.dailyProxyRequestLimit ?? d.dailyProxyRequestLimit)
+    pkgForm.allowSelfProxy = s ? !!s.allowSelfProxy : d.allowSelfProxy
+  }
   pkgVisible.value = true
 }
 
@@ -473,6 +598,7 @@ const savePackage = async () => {
     await tenantApi.updatePackage(pkgTarget.value.id, { ...pkgForm })
     ElMessage.success('配置已更新')
     pkgVisible.value = false
+    invalidateTenantScopeCache()
     await fetchList()
   } catch {
     // 错误已在拦截器提示
@@ -482,7 +608,7 @@ const savePackage = async () => {
 }
 
 onMounted(async () => {
-  await Promise.all([fetchList(), fetchStats()])
+  await Promise.all([fetchList(), fetchStats(), loadPackageSettings()])
 })
 </script>
 
@@ -566,5 +692,10 @@ onMounted(async () => {
   flex-wrap: wrap;
   justify-content: center;
   gap: 0;
+}
+.pkg-tip {
+  margin-left: 10px;
+  font-size: 12px;
+  color: #909399;
 }
 </style>

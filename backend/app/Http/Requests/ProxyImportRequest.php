@@ -16,6 +16,8 @@ class ProxyImportRequest extends FormRequest
         return [
             'list' => ['required', 'string'],
             'location' => ['nullable', 'string', 'max:64'],
+            'tenantId' => ['nullable', 'integer', 'exists:tenants,id'],
+            'tenant_id' => ['nullable', 'integer', 'exists:tenants,id'],
         ];
     }
 }
